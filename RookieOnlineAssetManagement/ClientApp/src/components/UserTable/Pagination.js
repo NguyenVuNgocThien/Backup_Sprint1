@@ -20,7 +20,6 @@ export default function Pagination(props) {
         setCurrentPage(number);
         props.paginate(number, rowsPerPage);
     };
-
     const { rowsPerPage, totalUsers } = props;
 
     const pageNumbers = [];

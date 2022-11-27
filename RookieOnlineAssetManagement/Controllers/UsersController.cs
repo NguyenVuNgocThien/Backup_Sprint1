@@ -154,7 +154,7 @@ namespace RookieOnlineAssetManagement.Controllers
             return BadRequest();
         }
 
-        [HttpGet("Pagination/{page}/{Type}/{Find}/{Sort}/{SortBy}")]
+        [HttpGet("Pagination/{page}/{type}/{find}/{sort}/{sortBy}")]
         public async Task<ActionResult<IEnumerable<UserModel>>> GetUserByType(int page = 0, string type = "", string find = "", string sort = "", string sortBy = "Ascending")
         {
             var userLogin = await _userManager.GetUserAsync(User);
@@ -170,6 +170,10 @@ namespace RookieOnlineAssetManagement.Controllers
             else if (find != "null" && type != "null" && sort == "null")
             {
                 list = await _userRepository.FindUser(find, userLogin, type);
+            }
+            else if(find!="null" && type != "null" && sort != "null")
+            {
+                list = await _userRepository.SortUser(sort, userLogin, type, find, sortBy);
             }
             else if (sort != "null")
             {
