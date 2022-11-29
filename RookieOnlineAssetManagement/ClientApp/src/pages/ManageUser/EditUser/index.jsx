@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./EditUser.css";
-import { getUserAPI, editUserAPI } from "../../../api/edituser";
+import { getUserAPI } from "../../../api/edituser";
 import { Controller, useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import { ErrorMessage } from "@hookform/error-message";
@@ -50,10 +50,6 @@ export default function EditUser() {
     let staffCode = location.state.staffCode;
 
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = () => {
         getUserAPI(staffCode).then((response) => {
             reset({
                 dateOfBirth: new Date(response.dateofBirth?.split("T")[0]),
@@ -70,7 +66,7 @@ export default function EditUser() {
                 }
             });
         });
-    };
+    }, []);
 
     const {
         register,

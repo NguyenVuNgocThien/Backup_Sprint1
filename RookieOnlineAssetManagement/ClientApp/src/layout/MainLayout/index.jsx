@@ -20,7 +20,7 @@ function MainLayout(props) {
                         <Sidebar></Sidebar>
                     </Col>
                     <Col xs={1}></Col>
-                    <Col xs={7} className="position-relative">
+                    <Col xs={8} className="position-relative">
                         <ModalCustom
                             modalData={modalContext.modalData}
                         />
@@ -28,7 +28,6 @@ function MainLayout(props) {
                             {props.children ? props.children : <Outlet />}
                         </div>
                     </Col>
-                    <Col xs={1}></Col>
                 </Row>
             </div>
         </Fragment>

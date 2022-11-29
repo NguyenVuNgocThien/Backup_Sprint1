@@ -110,32 +110,32 @@ namespace RookieOnlineAssetManagement.Repositories
                 Gender = x.Gender,
                 Location = x.Location,
                 Type = x.Type,
-                isDisabled=x.IsDisabled
+                isDisabled = x.IsDisabled
             }).ToListAsync();
             if (type == "Staff")
             {
-                var users = allUsers.Where(s => s.StaffCode.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Staff).ToList();
+                var users = allUsers.Where(s => s.StaffCode.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Staff).OrderBy(o => o.StaffCode).ToList();
                 if (users.Count == 0)
                 {
-                    users = allUsers.Where(s => s.FullName.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Staff).ToList();
+                    users = allUsers.Where(s => s.FullName.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Staff).OrderBy(o => o.StaffCode).ToList();
                 }
                 return _mapper.Map<List<UserModel>>(users);
             }
             else if (type == "Admin")
             {
-                var users = allUsers.Where(s => s.StaffCode.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Admin).ToList();
+                var users = allUsers.Where(s => s.StaffCode.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Admin).OrderBy(o => o.StaffCode).ToList();
                 if (users.Count == 0)
                 {
-                    users = allUsers.Where(s => (s.FullName.Replace(" ", "").ToUpper().ToUpper()).Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Admin).ToList();
+                    users = allUsers.Where(s => (s.FullName.Replace(" ", "").ToUpper().ToUpper()).Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false && s.Type == UserType.Admin).OrderBy(o => o.StaffCode).ToList();
                 }
                 return _mapper.Map<List<UserModel>>(users);
             }
             else
             {
-                var users = allUsers.Where(s => s.StaffCode.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false).ToList();
+                var users = allUsers.Where(s => s.StaffCode.Replace(" ", "").ToUpper().Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false).OrderBy(o => o.StaffCode).ToList();
                 if (users.Count == 0)
                 {
-                    users = allUsers.Where(s => (s.FullName.Replace(" ", "").ToUpper()).Contains(find.Replace(" ","").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false).ToList();
+                    users = allUsers.Where(s => (s.FullName.Replace(" ", "").ToUpper()).Contains(find.Replace(" ", "").ToUpper()) && s.Location == userLogin.Location && s.isDisabled == false).OrderBy(o => o.StaffCode).ToList();
                 }
                 return _mapper.Map<List<UserModel>>(users);
             }
@@ -154,7 +154,7 @@ namespace RookieOnlineAssetManagement.Repositories
                 Location = x.Location,
                 Type = x.Type
             }).ToListAsync();
-            int uCount = users.Count;
+            int uCount = users.Count();
             int totalPages = (uCount % 5 == 0) ? uCount / 5 : (uCount / 5) + 1;
             int offset = 5 * (page - 1);
             var res = users.Skip(offset).Take(5).ToList();
@@ -181,7 +181,7 @@ namespace RookieOnlineAssetManagement.Repositories
                 Gender = x.Gender,
                 Location = x.Location,
                 Type = x.Type,
-                isDisabled=x.IsDisabled
+                isDisabled = x.IsDisabled
             }).ToListAsync();
             if (type != "")
             {
@@ -229,16 +229,16 @@ namespace RookieOnlineAssetManagement.Repositories
                 Gender = x.Gender,
                 Location = x.Location,
                 Type = x.Type,
-                isDisabled=x.IsDisabled
+                isDisabled = x.IsDisabled
             }).ToListAsync();
             switch (sort)
             {
                 case "Staff Code":
-                    if (type != "null" && find=="null")
+                    if (type != "null" && find == "null")
                     {
                         if (sortBy == "Descending")
                         {
-                            users =GetUserByType(0, type, userLogin).Result.OrderByDescending(o => o.StaffCode).ToList();
+                            users = GetUserByType(0, type, userLogin).Result.OrderByDescending(o => o.StaffCode).ToList();
                             break;
                         }
                         else
@@ -247,11 +247,11 @@ namespace RookieOnlineAssetManagement.Repositories
                             break;
                         }
                     }
-                    else if(find!="null" && type=="null")
+                    else if (find != "null" && type == "null")
                     {
                         if (sortBy == "Descending")
                         {
-                            users = FindUser(find, userLogin, type).Result.OrderByDescending(o=>o.StaffCode).ToList();
+                            users = FindUser(find, userLogin, type).Result.OrderByDescending(o => o.StaffCode).ToList();
                             break;
                         }
                         else

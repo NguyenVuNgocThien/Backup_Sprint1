@@ -5,9 +5,9 @@ import axios from "axios";
 import "./HeaderComponent.css";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { ModalContext } from "../../context/ModalContext";
 import { Link } from "react-router-dom";
 import ChangePassword from "pages/ChangePassword";
+import ModalLogout from "components/ModalLogout";
 
 const Header = () => {
     const [username, setUsername] = useState("User");
@@ -15,9 +15,9 @@ const Header = () => {
     const [show, setShow] = useState(true);
     const [errorMsg, setErrorMsg] = useState("");
     const handleClose = () => setShow(false);
-    const modalContext = useContext(ModalContext);
 
     const [showModalChangePassword, setShowModalChangePassword] = useState(false);
+    const [toggleModalCustom, setToggleModalCustom] = useState(false);
 
     const passwordSchema = yup.object().shape({
         newPassword: yup
@@ -76,30 +76,12 @@ const Header = () => {
         event.target.classList.toggle("bi-eye-slash-fill");
     }
 
-    function OpenModalLogout() {
-        const newDataModal = {
-            isShowModal: true,
-            title: `Are you sure?`,
-            content: "Do you want to log out?",
-            isShowButtonCloseIcon: false,
-            isShowButtonClose: true,
-            isShowButtonFunction: true,
-            contentButtonFunction: "Log out",
-            contentButtonClose: "Cancel",
-            handleFunction: HandleLogout,
-        };
-        modalContext.HandleSetModalData(newDataModal);
-    }
-
-    const HandleLogout = () => {
-        axios.get("/api/Users/Logout").then(() => {
-            window.location.href =
-                "/Identity/Account/Login?returnUrl=" + window.location.pathname;
-        });
-    };
-
     function OpenModalChangePassword(event) {
         setShowModalChangePassword(!showModalChangePassword);
+    }
+
+    function ToggleModalCustom(event) {
+        setToggleModalCustom(!toggleModalCustom);
     }
 
     const HandleDisableErrorMessage = (event) => {
@@ -160,7 +142,7 @@ const Header = () => {
                     <NavDropdown.Item onClick={OpenModalChangePassword}>
                         Change password
                     </NavDropdown.Item>
-                    <NavDropdown.Item onClick={OpenModalLogout}>
+                    <NavDropdown.Item onClick={ToggleModalCustom}>
                         Logout
                     </NavDropdown.Item>
                 </NavDropdown>
@@ -271,6 +253,10 @@ const Header = () => {
             <ChangePassword
                 isShow={showModalChangePassword}
                 OnCLickCloseModal={OpenModalChangePassword}
+            />
+            <ModalLogout
+                isShow={toggleModalCustom}
+                OnCLickToggleModal={ToggleModalCustom}
             />
         </Fragment >
     );

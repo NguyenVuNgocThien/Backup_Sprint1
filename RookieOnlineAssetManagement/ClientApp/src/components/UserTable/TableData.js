@@ -15,12 +15,12 @@ export default function TableData() {
     const [searchString, setSearchString] = useState('');
     const [sortBy, setSortBy] = useState("Descending");
     const modalContext = useContext(ModalContext);
-    const [all, setAll] = useState(true);
+    const [all, setAll] = useState(false);
     const [admin, setAdmin] = useState(false);
     const [staff, setStaff] = useState(false);
     const [currentUser, setCurrentUser] = useState("");
     const [pageCurrent, setPageCurrent] = useState(1);
-    let str = "";
+
     const dataModalCanNotDeleteUser = {
         isShowModal: true,
         title: "Can not disable user?",
@@ -110,6 +110,7 @@ export default function TableData() {
             }
         }).catch((err) => console.log(err)
         )
+
         axios.get("/api/users").then((response) => {
             setCurrentUser(response.data.id);
         });
@@ -138,7 +139,7 @@ export default function TableData() {
     const handleSearchUser = () => {
         const str = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '').replace('null', '')
         const loadUser = async () => {
-            if (str !== ""&&all===false&&admin===false&&staff===false) {
+            if (str !== "" && all === false && admin === false && staff === false) {
                 let res = await api.get(endpoint["Users"](0, "All", str, "null", "null"));
                 try {
                     setUserList(res.data);
@@ -154,7 +155,7 @@ export default function TableData() {
                     console.error(err);
                 }
             }
-            else if (all === true&&str!=="") {
+            else if (all === true && str !== "") {
                 let res = await api.get(endpoint["Users"](0, "All", str, "null"));
                 try {
                     setUserList(res.data);
@@ -186,13 +187,13 @@ export default function TableData() {
                     console.error(err);
                 }
             }
-            paginate(1,5)
+            paginate(1, 5)
         };
         loadUser();
     };
     const handleSortByStaffCode = () => {
         const loadUser = async () => {
-            if (admin === true && staff === false && all === false && (searchString === null || searchString==='')) {
+            if (admin === true && staff === false && all === false && (searchString === null || searchString === '')) {
                 let res = await api.get(endpoint["Users"](0, "Admin", "null", "Staff Code", sortBy));
                 try {
                     setUserList(res.data);
@@ -220,7 +221,7 @@ export default function TableData() {
                     console.error(err);
                 }
             }
-            else if ((searchString === null || searchString==='') && (all === true || (admin === true && staff === true) || (admin === true && all === true) || (all === true && staff === true))) {
+            else if ((searchString === null || searchString === '') && (all === true || (admin === true && staff === true) || (admin === true && all === true) || (all === true && staff === true))) {
                 let res = await api.get(endpoint["Users"](0, "All", "null", "Staff Code", sortBy));
                 try {
                     setUserList(res.data);
@@ -262,7 +263,7 @@ export default function TableData() {
                     console.error(err);
                 }
             }
-            else if (searchString != null && admin === true ) {
+            else if (searchString != null && admin === true) {
                 let res = await api.get(endpoint["Users"](0, "Admin", searchString, "Staff Code", sortBy));
                 try {
                     setUserList(res.data);
@@ -726,35 +727,28 @@ export default function TableData() {
         }
     };
     const handleFilter = () => {
-        if (all === true)
-            str += "All "
-        if (admin === true)
-            str += "Admin "
-        if (staff === true)
-            str += "Staff"
-        console.info(str)
         const loadUser = async () => {
-        if (
-            all === true ||
-            (admin === true && staff === true) ||
-            (admin === true && all === true) ||
-            (all === true && staff === true)
-        ) {
-            let res = await api.get(endpoint["Users"](0, "All", "null", "null", "null"));
+            if (
+                all === true ||
+                (admin === true && staff === true) ||
+                (admin === true && all === true) ||
+                (all === true && staff === true)
+            ) {
+                let res = await api.get(endpoint["Users"](0, "All", "null", "null", "null"));
                 try {
                     setUserList(res.data);
                 } catch (err) {
                     console.error(err);
                 }
-        } else if (admin === true) {
-            let res = await api.get(endpoint["Users"](0, "Admin", "null", "null", "null"));
+            } else if (admin === true) {
+                let res = await api.get(endpoint["Users"](0, "Admin", "null", "null", "null"));
                 try {
                     setUserList(res.data);
                 } catch (err) {
                     console.error(err);
                 }
-        } else if (staff === true) {
-                let res = await api.get(endpoint["Users"](0, "Staff", "null", "null","null"));
+            } else if (staff === true) {
+                let res = await api.get(endpoint["Users"](0, "Staff", "null", "null", "null"));
                 try {
                     setUserList(res.data);
                 } catch (err) {
@@ -764,6 +758,7 @@ export default function TableData() {
         };
         loadUser();
     };
+
     return (
         <div style={{ marginTop: "150px" }}>
             <div className="row">
@@ -836,12 +831,12 @@ export default function TableData() {
                             onChange={(event) => setSearchString(event.target.value)}
                         ></input>
                         <button
-                            className="btn btn-outline-secondary" 
+                            className="btn btn-outline-secondary"
                             type="button"
                             id="button-addon2"
                             onClick={handleSearchUser}
                         >
-                            <i className="bi bi-search page-link" ></i>
+                            <i className="bi bi-search"></i>
                         </button>
                     </div>
                 </div>

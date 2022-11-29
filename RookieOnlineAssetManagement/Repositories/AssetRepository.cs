@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using RookieOnlineAssetManagement.Data;
 using RookieOnlineAssetManagement.Entities;
@@ -7,40 +8,106 @@ using RookieOnlineAssetManagement.Interface;
 using RookieOnlineAssetManagement.Models;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace RookieOnlineAssetManagement.Repositories
 {
-    public class AssetRepository : IAssetRepository
+    public class AssetRepository:IAssetRepository
     {
         private readonly IMapper _mapper;
         private readonly ApplicationDbContext _context;
-        public AssetRepository(IMapper mapper, ApplicationDbContext context)
+        private readonly UserManager<User> _userManager;
+        public AssetRepository(IMapper mapper, ApplicationDbContext context, UserManager<User> userManager)
         {
+            _userManager = userManager;
             _mapper = mapper;
             _context = context;
         }
-        public Task<List<AssetModel>> GetAllAsync(User userLogin)
+
+        public async Task<List<AssetModel>> GetListAsset(User userLogin, string filterByState, string filterByCategory, string searchString, string sort, string sortBy)
         {
-            var test = from x in _context.Users
-                       from a in _context.Assignments
-                       where x.StaffCode == a.AssignedBy
-                       where a.AssignedTo == "SD0001"
-                       select new UserModel
-                       {
-                           Id = x.Id,
-                           StaffCode = x.StaffCode,
-                           FullName = x.FirstName + " " + x.LastName,
-                           UserName = x.UserName,
-                           JoinedDate = x.JoinedDate,
-                           DateofBirth = x.DateofBirth,
-                           Gender = x.Gender,
-                           Location = x.Location,
-                           Type = x.Type,
-                           isDisabled = x.IsDisabled
-                       };
-            throw new System.NotImplementedException();
+            var assetList = await _context.Assets.Where(x => x.Location == userLogin.Location).Select(x=>new AssetModel
+            {
+                AssetCode=x.AssetCode,
+                AssetName=x.AssetName,
+                AssetState=x.State,
+                Category=x.Category.Name
+            }).OrderBy(x => x.AssetCode).ToListAsync();
+            if (searchString != "null")
+            {
+                assetList = assetList.Where(x => 
+                (x.AssetCode.Replace(" ", "")
+                .ToUpper()
+                .Contains(searchString.Replace(" ", "").ToUpper()))||
+                (x.AssetName.Replace(" ", "")
+                .ToUpper()
+                .Contains(searchString.Replace(" ", "").ToUpper()))).ToList();
+            }
+            if (filterByCategory != "null")
+            {
+                string[] listCategory = filterByCategory.Trim().Split(' ');
+                List<AssetModel> listAssetFilterByCategory = new List<AssetModel>();
+                foreach(var category in listCategory)
+                {
+                    if(category=="All")
+                    {
+                        listAssetFilterByCategory.AddRange(assetList.ToList());
+                        break;
+                    }
+                    listAssetFilterByCategory.AddRange(assetList.Where(x => x.Category == category).ToList());
+                }
+                assetList = listAssetFilterByCategory;
+            }
+            if (filterByState != "null")
+            {
+                string[] listState = filterByState.Trim().Split(' ');
+                List<AssetModel> listAssetFilterByState = new List<AssetModel>();
+                foreach (var state in listState)
+                {
+                    if (state == "All")
+                    {
+                        listAssetFilterByState.AddRange(assetList.ToList());
+                        break;
+                    }
+                    listAssetFilterByState.AddRange(assetList.Where(x => x.AssetState.ToString() == state).ToList());
+                }
+                assetList = listAssetFilterByState;
+            }
+            if(sortBy=="Ascending")
+                switch (sort)
+                {
+                        case "Asset Code":
+                            assetList = assetList.OrderBy(x => x.AssetCode).ToList();
+                            break;
+                        case "Asset Name":
+                            assetList = assetList.OrderBy(x => x.AssetCode).ToList();
+                            break;
+                        case "Category":
+                            assetList = assetList.OrderBy(x => x.Category).ToList();
+                            break;
+                        case "State":
+                            assetList = assetList.OrderBy(x => x.AssetState).ToList();
+                            break;
+                }
+            else
+            {
+                switch (sort)
+                {
+                    case "Asset Code":
+                        assetList = assetList.OrderByDescending(x => x.AssetCode).ToList();
+                        break;
+                    case "Asset Name":
+                        assetList = assetList.OrderByDescending(x => x.AssetCode).ToList();
+                        break;
+                    case "Category":
+                        assetList = assetList.OrderByDescending(x => x.Category).ToList();
+                        break;
+                    case "State":
+                        assetList = assetList.OrderByDescending(x => x.AssetState).ToList();
+                        break;
+                }
+            }
+            return _mapper.Map<List<AssetModel>>(assetList);
         }
     }
 }

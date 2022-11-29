@@ -1,6 +1,5 @@
 import { useRoutes } from "react-router-dom";
 import MainLayout from "layout/MainLayout";
-import Home from "pages/Home";
 import ManageUser from "pages/ManageUser/index";
 import CreateUser from "pages/ManageUser/CreateUser";
 import ManageAsset from "pages/ManageAsset";
@@ -11,6 +10,7 @@ import EditUser from "pages/ManageUser/EditUser";
 import { useContext } from "react";
 import { UserRoleContext } from "context/UserRoleContext";
 import NotFound from "pages/NotFound";
+import Home from "pages/Home";
 
 const Router = () => {
     const userRole = useContext(UserRoleContext);

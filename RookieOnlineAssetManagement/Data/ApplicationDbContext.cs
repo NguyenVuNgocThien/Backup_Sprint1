@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RookieOnlineAssetManagement.Entities;
 using RookieOnlineAssetManagement.InitializeData;
+using System;
 
 namespace RookieOnlineAssetManagement.Data
 {
@@ -15,6 +16,8 @@ namespace RookieOnlineAssetManagement.Data
 
         public virtual DbSet<Assignment> Assignments { get; set; }
         public virtual DbSet<Asset> Assets { get; set; }
+        public virtual DbSet<Category> Categories { get; set; }
+        public virtual DbSet<ReturningRequest> ReturningRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +39,10 @@ namespace RookieOnlineAssetManagement.Data
                     .HasConstraintName("FK_AssignmentTo_User");
 
             });
+
+            modelBuilder.Entity<Category>()
+              .HasIndex(p => new { p.Prefix, p.Name })
+              .IsUnique(true);
 
             modelBuilder.Entity<User>(entity =>
             {

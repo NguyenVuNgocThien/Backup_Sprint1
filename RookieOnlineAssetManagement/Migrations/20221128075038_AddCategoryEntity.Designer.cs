@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RookieOnlineAssetManagement.Data;
 
@@ -11,9 +12,10 @@ using RookieOnlineAssetManagement.Data;
 namespace RookieOnlineAssetManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221128075038_AddCategoryEntity")]
+    partial class AddCategoryEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -257,40 +259,6 @@ namespace RookieOnlineAssetManagement.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("RookieOnlineAssetManagement.Entities.ReturningRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("AcceptedById")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AssetCode")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RequestedById")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("ReturnedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("State")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AcceptedById");
-
-                    b.HasIndex("AssetCode");
-
-                    b.HasIndex("RequestedById");
-
-                    b.ToTable("ReturningRequests");
-                });
-
             modelBuilder.Entity("RookieOnlineAssetManagement.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -469,32 +437,9 @@ namespace RookieOnlineAssetManagement.Migrations
                     b.Navigation("AssignedToUser");
                 });
 
-            modelBuilder.Entity("RookieOnlineAssetManagement.Entities.ReturningRequest", b =>
-                {
-                    b.HasOne("RookieOnlineAssetManagement.Entities.User", "AcceptedBy")
-                        .WithMany()
-                        .HasForeignKey("AcceptedById");
-
-                    b.HasOne("RookieOnlineAssetManagement.Entities.Asset", "Asset")
-                        .WithMany("ReturningRequests")
-                        .HasForeignKey("AssetCode");
-
-                    b.HasOne("RookieOnlineAssetManagement.Entities.User", "RequestedBy")
-                        .WithMany()
-                        .HasForeignKey("RequestedById");
-
-                    b.Navigation("AcceptedBy");
-
-                    b.Navigation("Asset");
-
-                    b.Navigation("RequestedBy");
-                });
-
             modelBuilder.Entity("RookieOnlineAssetManagement.Entities.Asset", b =>
                 {
                     b.Navigation("Assignments");
-
-                    b.Navigation("ReturningRequests");
                 });
 
             modelBuilder.Entity("RookieOnlineAssetManagement.Entities.Category", b =>

@@ -34,6 +34,8 @@ namespace RookieOnlineAssetManagement
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAssetRepository, AssetRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddDefaultIdentity<User>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.Configure<IdentityOptions>(options =>

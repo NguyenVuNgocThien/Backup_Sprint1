@@ -7,13 +7,17 @@ import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
 import UserRoleProvider from "./context/UserRoleContext";
 import { ModalProvider } from "./context/ModalContext";
+import { Provider } from "react-redux";
+import store from "app/store";
 
 ReactDOM.render(
     <React.StrictMode>
         <BrowserRouter>
             <ModalProvider>
                 <UserRoleProvider>
-                    <App />
+                    <Provider store={store}>
+                        <App />
+                    </Provider>
                 </UserRoleProvider>
             </ModalProvider>
         </BrowserRouter>

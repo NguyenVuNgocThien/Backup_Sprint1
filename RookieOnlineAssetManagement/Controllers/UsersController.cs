@@ -171,10 +171,6 @@ namespace RookieOnlineAssetManagement.Controllers
             {
                 list = await _userRepository.FindUser(find, userLogin, type);
             }
-            else if(find!="null" && type != "null" && sort != "null")
-            {
-                list = await _userRepository.SortUser(sort, userLogin, type, find, sortBy);
-            }
             else if (sort != "null")
             {
                 list = await _userRepository.SortUser(sort, userLogin, type, find, sortBy);
