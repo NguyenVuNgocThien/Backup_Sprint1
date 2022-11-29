@@ -1,43 +1,59 @@
-import React, {  useEffect, useState } from "react";
+import React, {  useEffect, useState,useContext } from "react";
 import { Form, Dropdown, Table, ButtonGroup } from "react-bootstrap";
 import { useDispatch,useSelector } from "react-redux";
-import { fetchAssets} from "./AssetSlice";
+import { fetchAssets } from "./AssetSlice";
+import api, { endpoint } from "../../api/api"
+import { ModalContext } from "../../context/ModalContext";
 export default function ManageAssignment() {
     const dispatch = useDispatch();
     const [allState, setAllState] = useState(false);
+    const [allCategory, setAllCategory] = useState(true);
     const [assigned, setAssigned] = useState(true);
     const [available, setAvailable] = useState(true);
     const [notAvailable, setNotAvailable] = useState(true);
     const [waitingForRecycling, setWaitingForRecycling] = useState(false);
     const [recycled, setRecycled] = useState(false);
-    const [allCategory, setAllCategory] = useState(true)
-    const [bluetooth, setBluetooth] = useState(false)
-    const [headset, setHeadset] = useState(false)
-    const [ipad, setIpad] = useState(false)
-    const [iphone, setIphone] = useState(false)
-    const [laptop, setLaptop] = useState(false)
-    const [mobile, setMobile] = useState(false)
-    const [monitor, setMonitor] = useState(false)
-    const [computer, setComputer] = useState(false)
-    const [tablet, setTablet] = useState(false)
+
     const [searchString, setSearchString] = useState('');
     const list = useSelector(state => state.asset.assets)
     const [assetList, setAssetList] = useState(list)
+    const [categoryList, setCategoryList] = useState([])
+    const [checkList, setCheckList] = useState([])
+    const [sortBy, setSortBy] = useState("Descending");
+    const modalContext = useContext(ModalContext);
     let strState = ""
-    let strCategory=""
-    const [strFilterByState, setStrFilterByState] = useState('');
-    const [strFilterByCategory, setStrFilterByCategory] = useState('');
+    let strCategory = ""
+    let state = ""
+    let arr = []
+    const [strFilterByState, setStrFilterByState] = useState("Assigned Available NotAvailable");
+    const [strFilterByCategory, setStrFilterByCategory] = useState("All");
     const param = {
-        filterByState:"Assigned Available NotAvailable", filterByCategory:"All", searchString:"null", sort:"null", sortBy:"null"
+        strFilterByState: "Assigned Available NotAvailable", strFilterByCategory: "All", searchString: "null", sort: "null", sortBy: sortBy
     }
     useEffect(() => {
         dispatch(fetchAssets(param))
     }, [dispatch])
     useEffect(() => {
         setAssetList(list)
-    },[list])
+    }, [list])
+    useEffect(() => {
+        const loadCategories = async () => {
+            let res = await api.get(endpoint['Categories'])
+            try {
+                setCategoryList(res.data)
+            }
+            catch (err) {
+                console.error(err)
+            }
+            for (let i = 0; i < categoryList.length; i++) {
+                arr.push(false)
+            }
+            setCheckList(arr)
+        }
+        loadCategories();
+    }, [])
     const handleCheckbox = (event) => {
-        if (event.target.value === "All") {
+        if (event.target.value === "AllState") {
             setAllState(event.target.checked);
         }
         if (event.target.value === "Assigned") {
@@ -55,77 +71,44 @@ export default function ManageAssignment() {
         if (event.target.value === "Recycled") {
             setRecycled(event.target.checked);
         }
-        if (event.target.value === "All Category") {
+        if (event.target.value === "AllCategory") {
             setAllCategory(event.target.checked);
         }
-        if (event.target.value === "Bluetooth Mouse") {
-            setBluetooth(event.target.checked);
-        }
-        if (event.target.value === "Headset") {
-            setHeadset(event.target.checked);
-        }
-        if (event.target.value === "Ipad") {
-            setIpad(event.target.checked);
-        }
-        if (event.target.value === "Iphone") {
-            setIphone(event.target.checked);
-        }
-        if (event.target.value === "Laptop") {
-            setLaptop(event.target.checked);
-        }
-        if (event.target.value === "Mobile") {
-            setMobile(event.target.checked);
-        }
-        if (event.target.value === "Monitor") {
-            setMonitor(event.target.checked);
-        }
-        if (event.target.value === "Personal Computer") {
-            setComputer(event.target.checked);
-        }
-        if (event.target.value === "Tablet") {
-            setTablet(event.target.checked);
+
+        for (let i = 0; i < categoryList.length; i++) {
+            if (event.target.value === categoryList[i].categoryName) {
+                checkList[i] = event.target.checked
+            }
         }
     };
     const handleFilter = () => {
-            if (allState === true)
-                strState += "All "
-            if (assigned === true)
-                strState += "Assigned "
-            if (available === true)
-                strState += "Available "
-            if (notAvailable === true)
-                strState += "NotAvailable "
-            if (waitingForRecycling === true)
-                strState += "WaitingForRecycling "
-            if (recycled === true)
-                strState += "Recycle "
-
-            if (allCategory === true)
-                strCategory += "All "
-            if (bluetooth === true)
-                strCategory += "BluetoothMouse "
-            if (headset === true)
-                strCategory += "Headset "
-            if (ipad === true)
-                strCategory += "Ipad "
-            if (iphone === true)
-                strCategory += "Iphone "
-            if (laptop === true)
-                strCategory += "Laptop "
-            if (mobile === true)
-                strCategory += "Mobile "
-            if (monitor === true)
-                strCategory += "Monitor "
-            if (computer === true)
-                strCategory += "PersonalComputer "
-            if (tablet === true)
-                strCategory += "Tablet "
-            setStrFilterByState(strState)
+        if (allState === true)
+            strState += "All "
+        if (assigned === true)
+            strState += "Assigned "
+        if (available === true)
+            strState += "Available "
+        if (notAvailable === true)
+            strState += "NotAvailable "
+        if (waitingForRecycling === true)
+            strState += "WaitingForRecycling "
+        if (recycled === true)
+            strState += "Recycle "
+        if (allCategory === true)
+            strCategory += "All "
+        for (let i = 0; i < categoryList.length; i++) {
+            if (checkList[i] == true) {
+                strCategory = strCategory + categoryList[i].categoryName.replace(' ', '') + " "
+            }
+        }
+        if (strState !== "" && strCategory !== "") {
             setStrFilterByCategory(strCategory)
-            param.filterByState = strState;
-            param.filterByCategory=strCategory;
+            setStrFilterByState(strState)
+            param.strFilterByState = strState;
+            param.strFilterByCategory = strCategory;
             dispatch(fetchAssets(param))
             setAssetList(list)
+        }
     };
     const handleSearchAsset = () => {
         const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
@@ -135,12 +118,147 @@ export default function ManageAssignment() {
         else {
             param.searchString = "Not Found The Asset You Are Searching"
         }
-        if (strFilterByState !== "") {
-            param.filterByState = strFilterByState;
+        if (strFilterByState !== "" && strFilterByCategory !== "") {
+            param.strFilterByState = strFilterByState;
+            param.strFilterByCategory = strFilterByCategory;
         }
         dispatch(fetchAssets(param))
         setAssetList(list)
     }
+    const handleSortByAssetCode = () => {
+        const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
+        if (search !== "") {
+            param.searchString = search
+        }
+        if (strFilterByState !== "" && strFilterByCategory !== "") {
+            param.strFilterByState = strFilterByState;
+            param.strFilterByCategory = strFilterByCategory;
+        }
+        param.sort = "Asset Code"
+        dispatch(fetchAssets(param))
+        setAssetList(list)
+        if (sortBy === "Descending") {
+            setSortBy("Ascending")
+        }
+        else {
+            setSortBy("Descending")
+        }
+    }
+    const handleSortByAssetName = () => {
+        const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
+        if (search !== "") {
+            param.searchString = search
+        }
+        if (strFilterByState !== "" && strFilterByCategory !== "") {
+            param.strFilterByState = strFilterByState;
+            param.strFilterByCategory = strFilterByCategory;
+        }
+        param.sort = "Asset Name"
+        dispatch(fetchAssets(param))
+        setAssetList(list)
+        if (sortBy === "Descending") {
+            setSortBy("Ascending")
+        }
+        else {
+            setSortBy("Descending")
+        }
+    }
+    const handleSortByCategory = () => {
+        const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
+        if (search !== "") {
+            param.searchString = search
+        }
+        if (strFilterByState !== "" && strFilterByCategory !== "") {
+            param.strFilterByState = strFilterByState;
+            param.strFilterByCategory = strFilterByCategory;
+        }
+        param.sort = "Category"
+        dispatch(fetchAssets(param))
+        setAssetList(list)
+        if (sortBy === "Descending") {
+            setSortBy("Ascending")
+        }
+        else {
+            setSortBy("Descending")
+        }
+    }
+    const handleSortByState = () => {
+        const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
+        if (search !== "") {
+            param.searchString = search
+        }
+        if (strFilterByState !== "" && strFilterByCategory !== "") {
+            param.strFilterByState = strFilterByState;
+            param.strFilterByCategory = strFilterByCategory;
+        }
+        param.sort = "State"
+        dispatch(fetchAssets(param))
+        setAssetList(list)
+        if (sortBy === "Descending") {
+            setSortBy("Ascending")
+        }
+        else {
+            setSortBy("Descending")
+        }
+    }
+    const showAssetInfo = (asset) => {
+        var installedDate = new Date(asset.asset.installedDate)
+        let installedDateString = ('0' + installedDate.getDate()).slice(-2) + '/'
+            + ('0' + (installedDate.getMonth() + 1)).slice(-2) + '/'
+            + installedDate.getFullYear();
+        const assetData =`
+                      <div class="container" id="thien" >
+                        <div class="row mb-3">
+                                <div class="col-5">Asset Code</div>
+                                <div class="col-7">${asset.asset.assetCode}</div>
+                            </div>
+                            <div class="row mb-3" >
+                                <div class="col-5">Asset Name</div>
+                                <div class="col-7">${asset.asset.assetName}</div>
+                            </div>
+                            <div class="row mb-3" >
+                                <div class="col-5">Category</div>
+                                <div class="col-7">${asset.asset.category}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-5">Installed Date</div>
+                                <div class="col-7">
+                                    ${installedDateString}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-5">State</div>
+                                <div class="col-7">${state}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-5">Location</div>
+                                <div class="col-7">${asset.asset.location}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-5">Spectification</div>
+                                <div class="col-7">${asset.asset.spectification}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-5">History</div>
+                                <div class="col-7"></div>
+                            </div>
+                         </div>`
+            ;
+
+        const newDataModal = {
+            isShowModal: true,
+            title: "Detailed User Information",
+            content: assetData,
+            isShowButtonCloseIcon: true,
+            isShowButtonClose: false,
+            isShowButtonFunction: false,
+            contentButtonFunction: "",
+            contentButtonClose: "Close",
+            handleFunction: null,
+        };
+        modalContext.HandleSetModalData(newDataModal);
+    };
     return <div>
         <div style={{ marginTop: "150px" }}>
             <div className="row">
@@ -175,7 +293,7 @@ export default function ManageAssignment() {
                                 type="checkbox"
                                 id="All"
                                 label="All"
-                                value="All"
+                                value="AllState"
                                 checked={allState}
                                 onChange={handleCheckbox}
                             />
@@ -250,84 +368,25 @@ export default function ManageAssignment() {
                         >
                             <Form.Check
                                 type="checkbox"
-                                id="All Category"
+                                id="All"
                                 label="All"
-                                value="All Category"
+                                value="AllCategory"
                                 checked={allCategory}
                                 onChange={handleCheckbox}
                             />
-                            <Form.Check
-                                type="checkbox"
-                                id="Bluetooth Mouse"
-                                label="Bluetooth Mouse"
-                                value="Bluetooth Mouse"
-                                checked={bluetooth}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Headset"
-                                label="Headset"
-                                value="Headset"
-                                checked={headset}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Ipad"
-                                label="Ipad"
-                                value="Ipad"
-                                checked={ipad}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Iphone"
-                                label="Iphone"
-                                value="Iphone"
-                                checked={iphone}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Laptop"
-                                label="Laptop"
-                                value="Laptop"
-                                checked={laptop}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Mobile"
-                                label="Mobile"
-                                value="Mobile"
-                                checked={mobile}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Monitor"
-                                label="Monitor"
-                                value="Monitor"
-                                checked={monitor}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Personal Computer"
-                                label="Personal Computer"
-                                value="Personal Computer"
-                                checked={computer}
-                                onChange={handleCheckbox}
-                            />
-                            <Form.Check
-                                type="checkbox"
-                                id="Tablet"
-                                label="Tablet"
-                                value="Tablet"
-                                checked={tablet}
-                                onChange={handleCheckbox}
-                            />
+                            {categoryList.map((category, index) => {
+                                return (
+                                    <Form.Check
+                                        key={index }
+                                        type="checkbox"
+                                        id={category.categoryName}
+                                        label={category.categoryName}
+                                        value={category.categoryName}
+                                        checked={arr[index]}
+                                        onChange={handleCheckbox}
+                                    />
+                                    )
+                            }) }
                         </Dropdown.Menu>
                     </Dropdown>
                 </div>
@@ -365,17 +424,17 @@ export default function ManageAssignment() {
                 <Table>
                     <thead>
                         <tr>
-                            <th className="cursor-pointer" value="Asset Code" >
+                            <th className="cursor-pointer" value="Asset Code" onClick={handleSortByAssetCode}>
                                 Asset Code<i className="bi bi-caret-down-fill ms-1"></i>
                             </th>
-                            <th className="cursor-pointer" value="Asset Name">
+                            <th className="cursor-pointer" value="Asset Name" onClick={handleSortByAssetName}>
                                 Asset Name<i className="bi bi-caret-down-fill ms-1"></i>
                             </th>
-                            <th className="cursor-pointer" value="Category" >
+                            <th className="cursor-pointer" value="Category" onClick={handleSortByCategory}>
                                 Category<i className="bi bi-caret-down-fill ms-1"></i>
                             </th>
-                            <th className="cursor-pointer" value="State" >
-                                State<i className="bi bi-caret-down-fill ms-1"></i>
+                            <th className="cursor-pointer" value="State" onClick={handleSortByState}>
+                                State<i className="bi bi-caret-down-fill ms-1" ></i>
                             </th>
                         </tr>
                     </thead>
@@ -384,12 +443,27 @@ export default function ManageAssignment() {
                         {assetList
                             //.slice(indexOfFirstCourse, indexOfLastCourse)
                             .map((asset, index) => {
+                                if (asset.assetState === 1) {
+                                    state="Assigned"
+                                }
+                                if (asset.assetState === 2) {
+                                    state = "Available"
+                                }
+                                if (asset.assetState === 3) {
+                                    state = "Not Available"
+                                }
+                                if (asset.assetState === 4) {
+                                    state = "Waiting for recycling"
+                                }
+                                if (asset.assetState === 5) {
+                                    state = "Recycled"
+                                }
                                 return (
-                                    <tr key={index}>
-                                        <td>{asset.assetCode}</td>
-                                        <td>{asset.assetName}</td>
-                                        <td>{asset.category}</td>
-                                        <td>{asset.assetState}</td>
+                                    <tr key={index} onClick={() => showAssetInfo({asset})}>
+                                        <td >{asset.assetCode}</td>
+                                        <td >{asset.assetName}</td>
+                                        <td >{asset.category}</td>
+                                        <td >{state}</td>
                                         <td className="border-0 text-end">
                                             <i
                                                 className="bi bi-pencil-fill pe-3"

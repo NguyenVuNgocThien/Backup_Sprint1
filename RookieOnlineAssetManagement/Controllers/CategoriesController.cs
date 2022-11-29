@@ -24,7 +24,7 @@ namespace RookieOnlineAssetManagement.Controllers
         [HttpGet]
         public async Task<ActionResult<CategoryModel>> GetListCategory()
         {
-            var list = _categoryRepository.GetListCategory();
+            var list =await _categoryRepository.GetListCategory();
             return Ok(list);
         }
     }

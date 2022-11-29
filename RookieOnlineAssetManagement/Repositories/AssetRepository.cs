@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using RookieOnlineAssetManagement.Data;
 using RookieOnlineAssetManagement.Entities;
+using RookieOnlineAssetManagement.Enum;
 using RookieOnlineAssetManagement.Interface;
 using RookieOnlineAssetManagement.Models;
 using System.Collections.Generic;
@@ -26,13 +27,33 @@ namespace RookieOnlineAssetManagement.Repositories
 
         public async Task<List<AssetModel>> GetListAsset(User userLogin, string filterByState, string filterByCategory, string searchString, string sort, string sortBy)
         {
-            var assetList = await _context.Assets.Where(x => x.Location == userLogin.Location).Select(x=>new AssetModel
+            var assignments = await _context.Assignments.Include(a=>a.Asset).Where(a => a.AssignedBy == userLogin.Id&&a.IsDisabled==false).ToListAsync();
+            var assets = await _context.Assets.Where(x => x.Location == userLogin.Location).Select(x=>new AssetModel
             {
                 AssetCode=x.AssetCode,
                 AssetName=x.AssetName,
                 AssetState=x.State,
+                InstalledDate=x.InstalledDate,
+                Spectification=x.Specification,
+                Location=userLogin.Location,
                 Category=x.Category.Name
             }).OrderBy(x => x.AssetCode).ToListAsync();
+            List<AssetModel> assetList = new List<AssetModel>();
+            foreach(var asset in assets)
+            {
+                if (assignments.FirstOrDefault(a => a.Asset.AssetCode == asset.AssetCode) != null)
+                {
+                    assetList.Add(asset);
+                }
+                else
+                {
+                    if (asset.AssetState == AssetState.Available || asset.AssetState == AssetState.NotAvailable)
+                    {
+                        assetList.Add(asset);
+                    }
+                }
+
+            }
             if (searchString != "null")
             {
                 assetList = assetList.Where(x => 
@@ -54,7 +75,7 @@ namespace RookieOnlineAssetManagement.Repositories
                         listAssetFilterByCategory.AddRange(assetList.ToList());
                         break;
                     }
-                    listAssetFilterByCategory.AddRange(assetList.Where(x => x.Category == category).ToList());
+                    listAssetFilterByCategory.AddRange(assetList.Where(x => x.Category.Replace(" ","") == category).ToList());
                 }
                 assetList = listAssetFilterByCategory;
             }
@@ -107,7 +128,7 @@ namespace RookieOnlineAssetManagement.Repositories
                         break;
                 }
             }
-            return _mapper.Map<List<AssetModel>>(assetList);
+            return assetList;
         }
     }
 }
