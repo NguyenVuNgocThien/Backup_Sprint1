@@ -7,6 +7,7 @@ using RookieOnlineAssetManagement.Entities;
 using RookieOnlineAssetManagement.Enum;
 using RookieOnlineAssetManagement.Interface;
 using RookieOnlineAssetManagement.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace RookieOnlineAssetManagement.Repositories
             {
                 AssetCode=x.AssetCode,
                 AssetName=x.AssetName,
-                AssetState=x.State,
+                State=x.State,
                 InstalledDate=x.InstalledDate,
                 Spectification=x.Specification,
                 Location=userLogin.Location,
@@ -43,14 +44,14 @@ namespace RookieOnlineAssetManagement.Repositories
             {
                 if (assignments.FirstOrDefault(a => a.Asset.AssetCode == asset.AssetCode) != null)
                 {
-                    if (asset.AssetState == AssetState.Assigned)
+                    if (asset.State == AssetState.Assigned)
                     {
                         assetList.Add(asset);
                     }
                 }
                 else
                 {
-                    if (asset.AssetState == AssetState.Available || asset.AssetState == AssetState.NotAvailable)
+                    if (asset.State == AssetState.Available || asset.State == AssetState.NotAvailable)
                     {
                         assetList.Add(asset);
                     }
@@ -93,7 +94,7 @@ namespace RookieOnlineAssetManagement.Repositories
                         listAssetFilterByState.AddRange(assetList.ToList());
                         break;
                     }
-                    listAssetFilterByState.AddRange(assetList.Where(x => x.AssetState.ToString() == state).ToList());
+                    listAssetFilterByState.AddRange(assetList.Where(x => x.State.ToString() == state).ToList());
                 }
                 assetList = listAssetFilterByState;
             }
@@ -110,7 +111,7 @@ namespace RookieOnlineAssetManagement.Repositories
                             assetList = assetList.OrderBy(x => x.Category).ToList();
                             break;
                         case "State":
-                            assetList = assetList.OrderBy(x => x.AssetState).ToList();
+                            assetList = assetList.OrderBy(x => x.State).ToList();
                             break;
                 }
             else
@@ -127,7 +128,7 @@ namespace RookieOnlineAssetManagement.Repositories
                         assetList = assetList.OrderByDescending(x => x.Category).ToList();
                         break;
                     case "State":
-                        assetList = assetList.OrderByDescending(x => x.AssetState).ToList();
+                        assetList = assetList.OrderByDescending(x => x.State).ToList();
                         break;
                 }
             }
