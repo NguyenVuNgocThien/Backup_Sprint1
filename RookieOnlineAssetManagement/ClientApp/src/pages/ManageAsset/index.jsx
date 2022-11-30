@@ -3,7 +3,6 @@ import { Form, Dropdown, Table, ButtonGroup } from "react-bootstrap";
 import { useDispatch,useSelector } from "react-redux";
 import { fetchAssets } from "./AssetSlice";
 import api, { endpoint } from "../../api/api"
-import { ModalContext } from "../../context/ModalContext";
 export default function ManageAssignment() {
     const dispatch = useDispatch();
     const [allState, setAllState] = useState(false);
@@ -20,7 +19,6 @@ export default function ManageAssignment() {
     const [categoryList, setCategoryList] = useState([])
     const [checkList, setCheckList] = useState([])
     const [sortBy, setSortBy] = useState("Descending");
-    const modalContext = useContext(ModalContext);
     let strState = ""
     let strCategory = ""
     let state = ""
@@ -201,64 +199,12 @@ export default function ManageAssignment() {
             setSortBy("Descending")
         }
     }
-    const showAssetInfo = (asset) => {
-        var installedDate = new Date(asset.asset.installedDate)
-        let installedDateString = ('0' + installedDate.getDate()).slice(-2) + '/'
-            + ('0' + (installedDate.getMonth() + 1)).slice(-2) + '/'
-            + installedDate.getFullYear();
-        const assetData =`
-                      <div class="container" id="thien" >
-                        <div class="row mb-3">
-                                <div class="col-5">Asset Code</div>
-                                <div class="col-7">${asset.asset.assetCode}</div>
-                            </div>
-                            <div class="row mb-3" >
-                                <div class="col-5">Asset Name</div>
-                                <div class="col-7">${asset.asset.assetName}</div>
-                            </div>
-                            <div class="row mb-3" >
-                                <div class="col-5">Category</div>
-                                <div class="col-7">${asset.asset.category}</div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-5">Installed Date</div>
-                                <div class="col-7">
-                                    ${installedDateString}
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-5">State</div>
-                                <div class="col-7">${state}</div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-5">Location</div>
-                                <div class="col-7">${asset.asset.location}
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-5">Spectification</div>
-                                <div class="col-7">${asset.asset.spectification}</div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-5">History</div>
-                                <div class="col-7"></div>
-                            </div>
-                         </div>`
-            ;
-
-        const newDataModal = {
-            isShowModal: true,
-            title: "Detailed User Information",
-            content: assetData,
-            isShowButtonCloseIcon: true,
-            isShowButtonClose: false,
-            isShowButtonFunction: false,
-            contentButtonFunction: "",
-            contentButtonClose: "Close",
-            handleFunction: null,
-        };
-        modalContext.HandleSetModalData(newDataModal);
-    };
+    const handleEditAsset = (asset) => {
+        console.info(`this is Event to Edit ${asset.asset.assetCode}`)
+    }
+    const handleDelAsset = (asset) => {
+        console.info(`this is Event to Del ${asset.asset.assetCode}`)
+    }
     return <div>
         <div style={{ marginTop: "150px" }}>
             <div className="row">
@@ -441,39 +387,52 @@ export default function ManageAssignment() {
 
                     <tbody>
                         {assetList
-                            //.slice(indexOfFirstCourse, indexOfLastCourse)
                             .map((asset, index) => {
-                                if (asset.assetState === 1) {
+                                if (asset.state === 1) {
                                     state="Assigned"
                                 }
-                                if (asset.assetState === 2) {
+                                if (asset.state === 2) {
                                     state = "Available"
                                 }
-                                if (asset.assetState === 3) {
+                                if (asset.state === 3) {
                                     state = "Not Available"
                                 }
-                                if (asset.assetState === 4) {
+                                if (asset.state === 4) {
                                     state = "Waiting for recycling"
                                 }
-                                if (asset.assetState === 5) {
+                                if (asset.state === 5) {
                                     state = "Recycled"
                                 }
                                 return (
-                                    <tr key={index} onClick={() => showAssetInfo({asset})}>
+                                    <tr key={index} >
                                         <td >{asset.assetCode}</td>
                                         <td >{asset.assetName}</td>
                                         <td >{asset.category}</td>
                                         <td >{state}</td>
-                                        <td className="border-0 text-end">
-                                            <i
-                                                className="bi bi-pencil-fill pe-3"
-                                                style={{ color: "grey" }}
-                                            ></i>
-                                            <i
-                                                className="bi bi-x-circle"
-                                                style={{ color: "red" }}
-                                            ></i>
-                                        </td>
+                                        {asset.state===1?
+                                            <td className="border-0 text-end" >
+                                                <i
+                                                    className="bi bi-pencil-fill pe-3"
+                                                    style={{ color: "grey",opacity:"0.4"}}
+                                                ></i>
+                                                <i
+                                                    className="bi bi-x-circle"
+                                                    style={{ color: "red",opacity:"0.4" }}
+                                                ></i>
+                                            </td> :
+                                            <td className="border-0 text-end">
+                                                <i
+                                                    className="bi bi-pencil-fill pe-3"
+                                                    style={{ color: "grey" }}
+                                                    onClick={() => handleEditAsset({asset})}
+                                                ></i>
+                                                <i
+                                                    className="bi bi-x-circle"
+                                                    style={{ color: "red" }}
+                                                    onClick={() => handleDelAsset({asset})}
+                                                ></i>
+                                            </td>
+                                        }
                                     </tr>
                                 );
                             })}

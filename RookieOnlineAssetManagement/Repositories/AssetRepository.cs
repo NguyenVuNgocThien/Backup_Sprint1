@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace RookieOnlineAssetManagement.Repositories
 {
-    public class AssetRepository:IAssetRepository
+    public class AssetRepository : IAssetRepository
     {
         private readonly IMapper _mapper;
         private readonly ApplicationDbContext _context;
@@ -28,19 +28,19 @@ namespace RookieOnlineAssetManagement.Repositories
 
         public async Task<List<AssetModel>> GetListAsset(User userLogin, string filterByState, string filterByCategory, string searchString, string sort, string sortBy)
         {
-            var assignments = await _context.Assignments.Include(a=>a.Asset).Where(a => a.AssignedBy == userLogin.Id&&a.IsDisabled==false).ToListAsync();
-            var assets = await _context.Assets.Where(x => x.Location == userLogin.Location).Select(x=>new AssetModel
+            var assignments = await _context.Assignments.Include(a => a.Asset).Where(a => a.AssignedBy == userLogin.Id && a.IsDisabled == false).ToListAsync();
+            var assets = await _context.Assets.Where(x => x.Location == userLogin.Location).Select(x => new AssetModel
             {
-                AssetCode=x.AssetCode,
-                AssetName=x.AssetName,
-                State=x.State,
-                InstalledDate=x.InstalledDate,
-                Spectification=x.Specification,
-                Location=userLogin.Location,
-                Category=x.Category.Name
+                AssetCode = x.AssetCode,
+                AssetName = x.AssetName,
+                State = x.State,
+                InstalledDate = x.InstalledDate,
+                Spectification = x.Specification,
+                Location = userLogin.Location,
+                Category = x.Category.Name
             }).OrderBy(x => x.AssetCode).ToListAsync();
             List<AssetModel> assetList = new List<AssetModel>();
-            foreach(var asset in assets)
+            foreach (var asset in assets)
             {
                 if (assignments.FirstOrDefault(a => a.Asset.AssetCode == asset.AssetCode) != null)
                 {
@@ -51,19 +51,21 @@ namespace RookieOnlineAssetManagement.Repositories
                 }
                 else
                 {
-                    if (asset.State == AssetState.Available || asset.State == AssetState.NotAvailable)
+                    if (asset.State == AssetState.Available ||
+                        asset.State == AssetState.NotAvailable ||
+                        asset.State == AssetState.WaitingForRecycling ||
+                        asset.State == AssetState.Recycled)
                     {
                         assetList.Add(asset);
                     }
                 }
-
             }
             if (searchString != "null")
             {
-                assetList = assetList.Where(x => 
+                assetList = assetList.Where(x =>
                 (x.AssetCode.Replace(" ", "")
                 .ToUpper()
-                .Contains(searchString.Replace(" ", "").ToUpper()))||
+                .Contains(searchString.Replace(" ", "").ToUpper())) ||
                 (x.AssetName.Replace(" ", "")
                 .ToUpper()
                 .Contains(searchString.Replace(" ", "").ToUpper()))).ToList();
@@ -72,14 +74,14 @@ namespace RookieOnlineAssetManagement.Repositories
             {
                 string[] listCategory = filterByCategory.Trim().Split(' ');
                 List<AssetModel> listAssetFilterByCategory = new List<AssetModel>();
-                foreach(var category in listCategory)
+                foreach (var category in listCategory)
                 {
-                    if(category=="All")
+                    if (category == "All")
                     {
                         listAssetFilterByCategory.AddRange(assetList.ToList());
                         break;
                     }
-                    listAssetFilterByCategory.AddRange(assetList.Where(x => x.Category.Replace(" ","") == category).ToList());
+                    listAssetFilterByCategory.AddRange(assetList.Where(x => x.Category.Replace(" ", "") == category).ToList());
                 }
                 assetList = listAssetFilterByCategory;
             }
@@ -94,25 +96,26 @@ namespace RookieOnlineAssetManagement.Repositories
                         listAssetFilterByState.AddRange(assetList.ToList());
                         break;
                     }
-                    listAssetFilterByState.AddRange(assetList.Where(x => x.State.ToString() == state).ToList());
+                    AssetState newState = (AssetState)System.Enum.Parse(typeof(AssetState), state);
+                    listAssetFilterByState.AddRange(assetList.Where(x => x.State == newState).ToList());
                 }
                 assetList = listAssetFilterByState;
             }
-            if(sortBy=="Ascending")
+            if (sortBy == "Ascending")
                 switch (sort)
                 {
-                        case "Asset Code":
-                            assetList = assetList.OrderBy(x => x.AssetCode).ToList();
-                            break;
-                        case "Asset Name":
-                            assetList = assetList.OrderBy(x => x.AssetCode).ToList();
-                            break;
-                        case "Category":
-                            assetList = assetList.OrderBy(x => x.Category).ToList();
-                            break;
-                        case "State":
-                            assetList = assetList.OrderBy(x => x.State).ToList();
-                            break;
+                    case "Asset Code":
+                        assetList = assetList.OrderBy(x => x.AssetCode).ToList();
+                        break;
+                    case "Asset Name":
+                        assetList = assetList.OrderBy(x => x.AssetCode).ToList();
+                        break;
+                    case "Category":
+                        assetList = assetList.OrderBy(x => x.Category).ToList();
+                        break;
+                    case "State":
+                        assetList = assetList.OrderBy(x => x.State).ToList();
+                        break;
                 }
             else
             {
