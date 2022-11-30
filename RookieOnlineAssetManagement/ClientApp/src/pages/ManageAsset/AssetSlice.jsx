@@ -32,6 +32,6 @@ export const { loadAsset } = actions;
 export default reducer;
 
 export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (data,thunkAPI) => {
-    const res = await assetApi.getListAsset(data.strFilterByState, data.strFilterByCategory, data.searchString, data.sort, data.sortBy);
-    return res;
+    const res = await assetApi.getListAsset(data.currentPage, data.strFilterByState, data.strFilterByCategory, data.searchString, data.sort, data.sortBy);
+    return res.assetList;
 })

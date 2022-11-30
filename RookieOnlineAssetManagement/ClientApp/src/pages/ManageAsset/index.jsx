@@ -4,6 +4,7 @@ import { useDispatch,useSelector } from "react-redux";
 import { fetchAssets } from "./AssetSlice";
 import api, { endpoint } from "../../api/api"
 import { ModalContext } from "../../context/ModalContext";
+import Pagination from "./Pagination";
 export default function ManageAssignment() {
     const dispatch = useDispatch();
     const [allState, setAllState] = useState(false);
@@ -20,6 +21,35 @@ export default function ManageAssignment() {
     const [categoryList, setCategoryList] = useState([])
     const [checkList, setCheckList] = useState([])
     const [sortBy, setSortBy] = useState("Descending");
+
+
+    const [param, setParam] = useState({
+        currentPage: 1,
+        strFilterByState: "Assigned Available NotAvailable",
+        strFilterByCategory: "All",
+        searchString: "null",
+        sort: "null",
+        sortBy: sortBy
+    });
+
+    const initialPagination = {
+        rowsPerPage: 10,
+        currentPage: 1,
+    };
+    const [pagination, setPagination] = useState(initialPagination);
+
+    const paginate = (pageNumber) => {
+        setPagination({
+            rowsPerPage: 10,
+            currentPage: pageNumber,
+        });
+        param.currentPage = pageNumber;
+        setParam(param)
+    };
+
+    const [rowCount, setRowCount] = useState(29)
+    // setRowCount(29);
+
     const modalContext = useContext(ModalContext);
     let strState = ""
     let strCategory = ""
@@ -27,9 +57,8 @@ export default function ManageAssignment() {
     let arr = []
     const [strFilterByState, setStrFilterByState] = useState("Assigned Available NotAvailable");
     const [strFilterByCategory, setStrFilterByCategory] = useState("All");
-    const param = {
-        strFilterByState: "Assigned Available NotAvailable", strFilterByCategory: "All", searchString: "null", sort: "null", sortBy: sortBy
-    }
+    
+    
     useEffect(() => {
         dispatch(fetchAssets(param))
     }, [dispatch])
@@ -480,6 +509,10 @@ export default function ManageAssignment() {
                     </tbody>
                 </Table>
             }
+            <Pagination
+                rowsPerPage={pagination.rowsPerPage}
+                rowCount={rowCount}
+                paginate={paginate} />
         </div>
     </div>
 }

@@ -22,11 +22,11 @@ namespace RookieOnlineAssetManagement.Controllers
             _userManager = userManager;
             _assetRepository = assetRepository;
         }
-        [HttpGet("{filterByState}/{filterByCategory}/{searchString}/{sort}/{sortBy}")]
-        public async Task<ActionResult<AssetModel>> GetListAsset(string filterByState, string filterByCategory, string searchString, string sort, string sortBy)
+        [HttpGet("{page}/{filterByState}/{filterByCategory}/{searchString}/{sort}/{sortBy}")]
+        public async Task<ActionResult<AssetPagingModel>> GetListAsset(int page,string filterByState, string filterByCategory, string searchString, string sort, string sortBy)
         {
             var userLogin = await _userManager.GetUserAsync(User);
-            var listAsset = await _assetRepository.GetListAsset(userLogin,filterByState, filterByCategory, searchString, sort, sortBy);
+            var listAsset = await _assetRepository.GetListAsset( page ,userLogin,filterByState, filterByCategory, searchString, sort, sortBy);
             return Ok(listAsset);
         }
     }
