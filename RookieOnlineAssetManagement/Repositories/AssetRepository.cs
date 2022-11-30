@@ -43,7 +43,10 @@ namespace RookieOnlineAssetManagement.Repositories
             {
                 if (assignments.FirstOrDefault(a => a.Asset.AssetCode == asset.AssetCode) != null)
                 {
-                    assetList.Add(asset);
+                    if (asset.AssetState == AssetState.Assigned)
+                    {
+                        assetList.Add(asset);
+                    }
                 }
                 else
                 {
