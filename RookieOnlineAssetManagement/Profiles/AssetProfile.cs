@@ -9,5 +9,6 @@ public class AssetProfile : Profile
     {
         CreateMap<Asset, AssetDTO>()
             .ForMember(des => des.Category, src => src.MapFrom(ent => (ent.Category.Name)));
+        CreateMap<Asset, AssetModel>().ReverseMap();
     }
 }

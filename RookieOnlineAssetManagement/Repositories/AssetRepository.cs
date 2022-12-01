@@ -211,7 +211,10 @@ public class AssetRepository : IAssetRepository
         }
         int limit = 10;
         var assetTotal = assetQuery.Count();
-        if (page > 0) page--;
+        if (page > 0)
+        {
+            page--;
+        };
         if (assetTotal < limit)
         {
             page = 0;
