@@ -1,7 +1,6 @@
 using RookieOnlineAssetManagement.Enum;
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.Net;
 
 namespace RookieOnlineAssetManagement.Models
 {

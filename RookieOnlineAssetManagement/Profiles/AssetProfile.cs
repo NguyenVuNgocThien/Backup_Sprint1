@@ -2,13 +2,12 @@
 using RookieOnlineAssetManagement.Entities;
 using RookieOnlineAssetManagement.Models;
 
-namespace RookieOnlineAssetManagement.Profiles
+namespace RookieOnlineAssetManagement.Profiles;
+public class AssetProfile : Profile
 {
-    public class AssetProfile : Profile
+    public AssetProfile()
     {
-        public AssetProfile()
-        {
-            CreateMap<AssetModel, Asset>().ReverseMap();
-        }
+        CreateMap<Asset, AssetDTO>()
+            .ForMember(des => des.Category, src => src.MapFrom(ent => (ent.Category.Name)));
     }
 }

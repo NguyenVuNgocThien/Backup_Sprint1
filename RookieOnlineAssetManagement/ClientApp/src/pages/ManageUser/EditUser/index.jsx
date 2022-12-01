@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./EditUser.css";
-import { getUserAPI } from "../../../api/edituser";
+import { getUserAPI } from "api/edituser";
 import { Controller, useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import { ErrorMessage } from "@hookform/error-message";
@@ -47,10 +47,18 @@ export default function EditUser() {
         location: "",
     });
 
-    let staffCode = location.state.staffCode;
+    const {
+        register,
+        handleSubmit,
+        getValues,
+        reset,
+        formState: { errors },
+        control,
+    } = useForm({ mode: "all" });
+    const navigate = useNavigate();
 
     useEffect(() => {
-        getUserAPI(staffCode).then((response) => {
+        getUserAPI(location.state.staffCode).then((response) => {
             reset({
                 dateOfBirth: new Date(response.dateofBirth?.split("T")[0]),
                 joinedDate: new Date(response.joinedDate?.split("T")[0]),
@@ -66,18 +74,7 @@ export default function EditUser() {
                 }
             });
         });
-    }, []);
-
-    const {
-        register,
-        handleSubmit,
-        getValues,
-        reset,
-
-        formState: { errors },
-        control,
-    } = useForm({ mode: "all" });
-    const navigate = useNavigate();
+    }, [reset, location.state]);
 
     const onSubmit = (data) => {
         let userData = {
@@ -85,7 +82,7 @@ export default function EditUser() {
             lastName: user.lastName,
             userName: user.userName,
             fullName: user.firstName + " " + user.lastName,
-            staffCode: staffCode,
+            staffCode: location.state.staffCode,
             gender: parseInt(data.gender),
             type: parseInt(data.type),
             dateOfBirth: GetDate(data.dateOfBirth),
@@ -106,7 +103,7 @@ export default function EditUser() {
                 Edit User
             </h1>
             <div className="row">
-                <div className="col-sm-12 col-xl-9">
+                <div className="col-sm-12 col-xl-9 edit-user-form">
                     <form onSubmit={handleSubmit(onSubmit)} className="mx-3 mt-4">
                         <div className="row mb-3">
                             <label

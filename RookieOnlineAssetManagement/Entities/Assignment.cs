@@ -1,6 +1,6 @@
-﻿using RookieOnlineAssetManagement.Enum;
+﻿using Microsoft.EntityFrameworkCore;
+using RookieOnlineAssetManagement.Enum;
 using System;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RookieOnlineAssetManagement.Entities
 {

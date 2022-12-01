@@ -24,6 +24,10 @@
     margin-bottom: 20px;
     font-weight: bold;
 }
+.icon-disabled {
+    opacity: .4;
+    pointer-events: none;
+}
 
 .bg-nash-red {
     background-color: var(--primary-color);

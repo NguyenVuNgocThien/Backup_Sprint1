@@ -3,6 +3,9 @@ import { Form, Dropdown, Table, ButtonGroup } from "react-bootstrap";
 import { useDispatch,useSelector } from "react-redux";
 import { fetchAssets } from "./AssetSlice";
 import api, { endpoint } from "../../api/api"
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import ModalDetail from "./components/ModalDetail";
+import Pagination from "./Pagination";
 export default function ManageAssignment() {
     const dispatch = useDispatch();
     const [allState, setAllState] = useState(false);
@@ -12,27 +15,55 @@ export default function ManageAssignment() {
     const [notAvailable, setNotAvailable] = useState(true);
     const [waitingForRecycling, setWaitingForRecycling] = useState(false);
     const [recycled, setRecycled] = useState(false);
-
+    const [showModalDetail, setShowModalDetail] = useState(false);
     const [searchString, setSearchString] = useState('');
+    const [asset, setAsset] = useState();
     const list = useSelector(state => state.asset.assets)
     const [assetList, setAssetList] = useState(list)
     const [categoryList, setCategoryList] = useState([])
     const [checkList, setCheckList] = useState([])
+    const [listHistory, setListHistory] = useState([])
     const [sortBy, setSortBy] = useState("Descending");
+    const [pageCurrent, setPageCurrent] = useState(1);
     let strState = ""
     let strCategory = ""
     let state = ""
     let arr = []
     const [strFilterByState, setStrFilterByState] = useState("Assigned Available NotAvailable");
     const [strFilterByCategory, setStrFilterByCategory] = useState("All");
-    const param = {
-        strFilterByState: "Assigned Available NotAvailable", strFilterByCategory: "All", searchString: "null", sort: "null", sortBy: sortBy
-    }
+    const [param, setParam] = useState({
+        currentPage: 1,
+        strFilterByState: "Assigned Available NotAvailable",
+        strFilterByCategory: "All",
+        searchString: "null",
+        sort: "null",
+        sortBy: sortBy
+    });
+    const initialPagination = {
+        rowsPerPage: 10,
+        currentPage: 1,
+    };
+    const [pagination, setPagination] = useState(initialPagination);
+
+    const paginate = (pageNumber) => {
+        setPageCurrent(pageNumber)
+        setPagination({
+            rowsPerPage: 10,
+            currentPage: pageNumber,
+        });
+        param.currentPage = pageNumber;
+        setParam(param)
+        dispatch(fetchAssets(param))
+        setAssetList(list)
+    };
+    const total = useSelector(state => state.asset.total)
+    const [rowCount, setRowCount] = useState()
     useEffect(() => {
         dispatch(fetchAssets(param))
     }, [dispatch])
     useEffect(() => {
         setAssetList(list)
+        setRowCount(total)
     }, [list])
     useEffect(() => {
         const loadCategories = async () => {
@@ -50,6 +81,35 @@ export default function ManageAssignment() {
         }
         loadCategories();
     }, [])
+    function CompactText(text) {
+        var result = "";
+        if (text.split('').length <= 15)
+            return text;
+
+        else {
+            for (var i = 0; i < 15; i++) {
+                result = result.concat(text.split('')[i])
+            }
+            return result + "...";
+        }
+    }
+    const HandleCloseModalDetail = (event) => {
+        setShowModalDetail(false);
+    }
+    const HandleWatchDetailAsset = (asset) => {
+        const load = async () => {
+            let res = await api.get(endpoint['History'](asset.assetCode))
+            try {
+                setListHistory(res.data)
+            }
+            catch (err) {
+                console.error(err)
+            }
+        }
+        load();
+        setAsset(asset)
+        setShowModalDetail(true);
+    }
     const handleCheckbox = (event) => {
         if (event.target.value === "AllState") {
             setAllState(event.target.checked);
@@ -91,7 +151,7 @@ export default function ManageAssignment() {
         if (waitingForRecycling === true)
             strState += "WaitingForRecycling "
         if (recycled === true)
-            strState += "Recycle "
+            strState += "Recycled "
         if (allCategory === true)
             strCategory += "All "
         for (let i = 0; i < categoryList.length; i++) {
@@ -104,8 +164,13 @@ export default function ManageAssignment() {
             setStrFilterByState(strState)
             param.strFilterByState = strState;
             param.strFilterByCategory = strCategory;
+            if (searchString === "") {
+                param.searchString="null"
+            }
+            setParam(param)
             dispatch(fetchAssets(param))
             setAssetList(list)
+            paginate(1, 10)
         }
     };
     const handleSearchAsset = () => {
@@ -119,9 +184,11 @@ export default function ManageAssignment() {
         if (strFilterByState !== "" && strFilterByCategory !== "") {
             param.strFilterByState = strFilterByState;
             param.strFilterByCategory = strFilterByCategory;
+            setParam(param)
         }
         dispatch(fetchAssets(param))
         setAssetList(list)
+        paginate(1, 10)
     }
     const handleSortByAssetCode = () => {
         const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
@@ -133,14 +200,17 @@ export default function ManageAssignment() {
             param.strFilterByCategory = strFilterByCategory;
         }
         param.sort = "Asset Code"
-        dispatch(fetchAssets(param))
-        setAssetList(list)
         if (sortBy === "Descending") {
             setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         else {
             setSortBy("Descending")
+            param.sortBy = "Descending"
         }
+        setParam(param)
+        dispatch(fetchAssets(param))
+        setAssetList(list)
     }
     const handleSortByAssetName = () => {
         const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
@@ -152,14 +222,17 @@ export default function ManageAssignment() {
             param.strFilterByCategory = strFilterByCategory;
         }
         param.sort = "Asset Name"
-        dispatch(fetchAssets(param))
-        setAssetList(list)
         if (sortBy === "Descending") {
             setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         else {
             setSortBy("Descending")
+            param.sortBy = "Descending"
         }
+        setParam(param)
+        dispatch(fetchAssets(param))
+        setAssetList(list)
     }
     const handleSortByCategory = () => {
         const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
@@ -171,14 +244,17 @@ export default function ManageAssignment() {
             param.strFilterByCategory = strFilterByCategory;
         }
         param.sort = "Category"
-        dispatch(fetchAssets(param))
-        setAssetList(list)
         if (sortBy === "Descending") {
             setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         else {
             setSortBy("Descending")
+            param.sortBy = "Descending"
         }
+        setParam(param)
+        dispatch(fetchAssets(param))
+        setAssetList(list)
     }
     const handleSortByState = () => {
         const search = searchString.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/g, '')
@@ -194,10 +270,13 @@ export default function ManageAssignment() {
         setAssetList(list)
         if (sortBy === "Descending") {
             setSortBy("Ascending")
+            param.sortBy="Ascending"
         }
         else {
             setSortBy("Descending")
+            param.sortBy="Descending"
         }
+        setParam(param)
     }
     const handleEditAsset = (asset) => {
         console.info(`this is Event to Edit ${asset.asset.assetCode}`)
@@ -366,8 +445,8 @@ export default function ManageAssignment() {
                     </button>
                 </div>
             </div>
-            {list.length === 0 ? <h5>No results were found to match your search</h5> :
-                <Table>
+            {assetList.length === 0 ? <h5>No results were found to match your search</h5> :
+                <table className="table table-borderless">
                     <thead>
                         <tr>
                             <th className="cursor-pointer" value="Asset Code" onClick={handleSortByAssetCode}>
@@ -405,10 +484,41 @@ export default function ManageAssignment() {
                                 }
                                 return (
                                     <tr key={index} >
-                                        <td >{asset.assetCode}</td>
-                                        <td >{asset.assetName}</td>
-                                        <td >{asset.category}</td>
-                                        <td >{state}</td>
+                                        <td className="p-0" onClick={() => HandleWatchDetailAsset(asset)}>
+                                            <div className="my-2 ms-2">
+                                                {asset.assetCode}
+                                            </div>
+                                            <hr className="m-0 me-3" />
+                                        </td>
+                                        <td className="p-0" onClick={() => HandleWatchDetailAsset(asset)}>
+                                            <div className="my-2 ms-2">
+                                                <OverlayTrigger
+                                                    key={'bottom'}
+                                                    placement={'bottom'}
+                                                    overlay={
+                                                        <Tooltip>
+                                                            {asset.assetName}
+                                                        </Tooltip>
+                                                    }
+                                                >
+                                                    <p className="m-0">{CompactText(asset.assetName)}</p>
+                                                </OverlayTrigger>
+
+                                            </div>
+                                            <hr className="m-0 me-3" />
+                                        </td>
+                                        <td className="p-0" onClick={() => HandleWatchDetailAsset(asset)}>
+                                            <div className="my-2 ms-2">
+                                                {asset.category}
+                                            </div>
+                                            <hr className="m-0 me-3" />
+                                        </td>
+                                        <td className="p-0" onClick={() => HandleWatchDetailAsset(asset)}>
+                                            <div className="my-2 ms-2">
+                                                {state}
+                                            </div>
+                                            <hr className="m-0 me-3" />
+                                        </td>
                                         {asset.state===1?
                                             <td className="border-0 text-end" >
                                                 <i
@@ -437,8 +547,22 @@ export default function ManageAssignment() {
                                 );
                             })}
                     </tbody>
-                </Table>
+                </table>
             }
+            <Pagination
+                rowsPerPage={pagination.rowsPerPage}
+                rowCount={rowCount}
+                paginate={paginate}
+                pageCurrent={pageCurrent}
+            />
         </div>
+        {asset === undefined ? <h5></h5> :
+            <ModalDetail
+                isShow={showModalDetail}
+                OnclickCloseModalDetail={HandleCloseModalDetail}
+                asset={asset}
+                listHistory={listHistory}
+            />
+            }
     </div>
 }

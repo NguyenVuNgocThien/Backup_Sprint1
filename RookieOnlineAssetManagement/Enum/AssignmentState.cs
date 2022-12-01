@@ -2,7 +2,7 @@
 {
     public enum AssignmentState
     {
-        WaitingForAcceptance = 1,
-        Accepted = 2
+        Accepted = 1,
+        WaitingForAcceptance = 2
     }
 }

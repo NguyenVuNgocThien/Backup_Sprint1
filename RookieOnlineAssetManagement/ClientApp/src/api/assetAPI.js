@@ -1,8 +1,8 @@
 ﻿import axiosClient from "./axiosClient";
 
 const assetApi = {
-    getListAsset: (filterByState, filterByCategory, searchString, sort, sortBy) => {
-        const url = `/Assets/${filterByState}/${filterByCategory}/${searchString}/${sort}/${sortBy}`;
+    getListAsset: (currentPage, filterByState, filterByCategory, searchString, sort, sortBy) => {
+        const url = `/Assets/${currentPage}/${filterByState}/${filterByCategory}/${searchString}/${sort}/${sortBy}`;
         return axiosClient.get(url);
     },
 

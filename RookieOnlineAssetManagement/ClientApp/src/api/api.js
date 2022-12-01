@@ -6,8 +6,10 @@ export const endpoint = {
     'FindUser': (find) => `api/Users/Find/${find}`,
     'SortUser': (sort) => `api/Users/Sort/${sort}`,
     'ListUserByType': (type, page) => `api/Users/${type}/${page}`,
-    'Categories':'api/Categories',
+    'Categories': 'api/Categories',
+    'History':(assetCode)=>`api/Assets/${assetCode}`
 }
+
 export default axios.create({
     baseURL: '/'
 })

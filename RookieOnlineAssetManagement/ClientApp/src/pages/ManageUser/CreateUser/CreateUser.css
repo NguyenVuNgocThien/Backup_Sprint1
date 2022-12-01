@@ -4,13 +4,13 @@
     box-sizing: border-box;
 }
 
-.form-btn__save{
+.form-btn__save {
     background-color: #e30c18 !important;
     color: #fff !important;
     border: 3px solid #e30c18 !important;
 }
 
-.form-btn__cancel{
+.form-btn__cancel {
     border: 3px solid #adb1b6 !important;
     color: #848b91 !important;
 }
@@ -20,11 +20,11 @@
     height: 100%
 }
 
-.date-picker {
+.create-user-form .date-picker {
     border: 3px solid #aaaaaa !important;
 }
 
-.date-picker__error-message {
+.create-user-form .date-picker__error-message {
     border: 3px solid red !important;
 }
 
@@ -40,10 +40,6 @@
 
 .error-message {
     color: #bf1650;
-}
-
-.error-message::before {
-    display: inline;
 }
 
 #userType {

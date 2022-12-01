@@ -6,7 +6,6 @@ using RookieOnlineAssetManagement.Interface;
 using RookieOnlineAssetManagement.Models;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -26,6 +25,14 @@ namespace RookieOnlineAssetManagement.Controllers
             _userManager = userManager;
             _userRepository = userRepository;
             _signInManager = signInManager;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<ActionResult<UserPagingModel>> GetUsers([FromQuery] SearchParameters parameters)
+        {
+            var assignor = await _userManager.GetUserAsync(User);
+            var result = await _userRepository.GetUsersAsync(parameters, assignor.Location);
+            return Ok(result);
         }
 
         [HttpGet]
@@ -198,11 +205,11 @@ namespace RookieOnlineAssetManagement.Controllers
             return Ok(user);
         }
 
-        [HttpGet("checkuser/{id}")]
-        public async Task<ActionResult> CheckUserCanDelete(string id)
+        [HttpGet("checkuser/{staffCode}")]
+        public async Task<ActionResult> CheckUserCanDelete(string staffCode)
         {
-            var assignment = await _userRepository.CheckUserCanDeleteAsync(id);
-            if (assignment == null)
+            var assignment = await _userRepository.CheckUserCanDeleteAsync(staffCode);
+            if (assignment == 0)
             {
                 return Ok("Can delete user");
             }
@@ -212,10 +219,10 @@ namespace RookieOnlineAssetManagement.Controllers
             }
         }
 
-        [HttpPut("delete/{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        [HttpPut("delete/{staffCode}")]
+        public async Task<IActionResult> DeleteUser(string staffCode)
         {
-            var user = await _userRepository.DeleteUserAsync(id);
+            var user = await _userRepository.DeleteUserAsync(staffCode);
             if (user != null)
             {
                 return Ok(user);

@@ -1,16 +1,19 @@
 import { useRoutes } from "react-router-dom";
-import MainLayout from "layout/MainLayout";
-import ManageUser from "pages/ManageUser/index";
-import CreateUser from "pages/ManageUser/CreateUser";
-import ManageAsset from "pages/ManageAsset";
-import ManageAssignment from "pages/ManageAssignment";
-import RequestForReturning from "pages/RequestForReturning";
-import Report from "pages/Report";
-import EditUser from "pages/ManageUser/EditUser";
 import { useContext } from "react";
 import { UserRoleContext } from "context/UserRoleContext";
-import NotFound from "pages/NotFound";
+
+import MainLayout from "layout/MainLayout";
+
 import Home from "pages/Home";
+import ManageUser from "pages/ManageUser/index";
+import CreateUser from "pages/ManageUser/CreateUser";
+import EditUser from "pages/ManageUser/EditUser";
+import ManageAsset from "pages/ManageAsset";
+import ManageAssignment from "pages/ManageAssignment";
+import CreateAssignment from "pages/ManageAssignment/CreateAssignment";
+import RequestForReturning from "pages/RequestForReturning";
+import Report from "pages/Report";
+import NotFound from "pages/NotFound";
 
 const Router = () => {
     const userRole = useContext(UserRoleContext);
@@ -23,6 +26,10 @@ const Router = () => {
                 {
                     path: "",
                     element: <Home />,
+                },
+                {
+                    path: "*",
+                    element: <NotFound />,
                 },
                 {
                     path: "manage-user",
@@ -45,6 +52,10 @@ const Router = () => {
                     element: userRole === "admin" ? <ManageAssignment /> : <NotFound />,
                 },
                 {
+                    path: "manage-assignment/create-new-assignment",
+                    element: userRole === "admin" ? <CreateAssignment /> : <NotFound />,
+                },
+                {
                     path: "request-for-returning",
                     element:
                         userRole === "admin" ? <RequestForReturning /> : <NotFound />,
@@ -52,10 +63,6 @@ const Router = () => {
                 {
                     path: "report",
                     element: userRole === "admin" ? <Report /> : <NotFound />,
-                },
-                {
-                    path: "*",
-                    element: <NotFound />,
                 },
             ],
         },

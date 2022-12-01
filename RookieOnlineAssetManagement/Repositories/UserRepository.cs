@@ -1,101 +1,99 @@
-﻿using AutoMapper;
-using RookieOnlineAssetManagement.Helpper;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using RookieOnlineAssetManagement.Data;
-using RookieOnlineAssetManagement.Entities;
-using RookieOnlineAssetManagement.Enum;
-using RookieOnlineAssetManagement.Interface;
-using RookieOnlineAssetManagement.Models;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using AutoMapper;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using RookieOnlineAssetManagement.Enum;
+using RookieOnlineAssetManagement.Data;
+using RookieOnlineAssetManagement.Models;
+using RookieOnlineAssetManagement.Helpper;
+using RookieOnlineAssetManagement.Entities;
+using RookieOnlineAssetManagement.Interface;
 
-namespace RookieOnlineAssetManagement.Repositories
+namespace RookieOnlineAssetManagement.Repositories;
+public class UserRepository : IUserRepository
 {
+    private readonly IMapper _mapper;
+    private readonly ApplicationDbContext _context;
+    private readonly UserManager<User> _userManager;
 
-    public class UserRepository : IUserRepository
+    public UserRepository(IMapper mapper, ApplicationDbContext context, UserManager<User> userManager)
     {
-        private readonly IMapper _mapper;
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<User> _userManager;
+        _userManager = userManager;
+        _mapper = mapper;
+        _context = context;
+    }
 
-        public UserRepository(IMapper mapper, ApplicationDbContext context, UserManager<User> userManager)
-        {
-            _userManager = userManager;
-            _mapper = mapper;
-            _context = context;
-        }
+    public async Task<List<UserDTO>> GetAllAsync(User userLogin)
+    {
+        var users = await _context.Users.Where(s => s.IsDisabled == false && s.Location == userLogin.Location).OrderBy(s => s.StaffCode).ToListAsync();
+        return _mapper.Map<List<UserDTO>>(users);
+    }
 
-        public async Task<List<UserDTO>> GetAllAsync(User userLogin)
-        {
-            var users = await _context.Users.Where(s => s.IsDisabled == false && s.Location == userLogin.Location).OrderBy(s => s.StaffCode).ToListAsync();
-            return _mapper.Map<List<UserDTO>>(users);
-        }
-
-        public async Task<UserDTO> CreateAsync(CreateUserDTO model, User user)
-        {
-            string[] splitFirstName = model.FirstName.Split(' ');
-            string fullFirstName = "";
-            foreach (string slice in splitFirstName)
-                if (slice.Length > 0)
-                {
-                    fullFirstName += slice.ToString().ToLower();
-                }
-            string[] splitlastname = model.LastName.Split(' ');
-            string fullLastName = "";
-            foreach (string slice in splitlastname)
-                if (slice.Length > 0)
-                {
-                    fullLastName += slice[0].ToString().ToLower();
-                }
-            var userName = fullFirstName + fullLastName;
-            userName = Utilities.ChangeFormatName(userName);
-            var duplicatename = await _context.Users.FirstOrDefaultAsync(p => p.UserName == userName);
-
-            int count = 0;
-            string newname = userName;
-            while (duplicatename != null)
+    public async Task<UserDTO> CreateAsync(CreateUserDTO model, User user)
+    {
+        string[] splitFirstName = model.FirstName.Split(' ');
+        string fullFirstName = "";
+        foreach (string slice in splitFirstName)
+            if (slice.Length > 0)
             {
-                count++;
-                newname = (userName + count.ToString());
-                duplicatename = await _context.Users.FirstOrDefaultAsync(p => p.UserName == newname);
+                fullFirstName += slice.ToString().ToLower();
             }
-            DateTime dateOfBirth = DateTime.Parse(model.DateofBirth.ToString());
-            DateTime joinedDate = DateTime.Parse(model.JoinedDate.ToString());
-
-            var staffCode = "SD0001";
-
-            int total = await _context.Users.CountAsync();
-            if (total >= 0)
+        string[] splitlastname = model.LastName.Split(' ');
+        string fullLastName = "";
+        foreach (string slice in splitlastname)
+            if (slice.Length > 0)
             {
-                total++;
-                staffCode = "SD" + total.ToString().PadLeft(4, '0');
+                fullLastName += slice[0].ToString().ToLower();
             }
+        var userName = fullFirstName + fullLastName;
+        userName = Utilities.ChangeFormatName(userName);
+        var duplicatename = await _context.Users.FirstOrDefaultAsync(p => p.UserName == userName);
 
-            var newUser = new User
-            {
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                DateofBirth = dateOfBirth,
-                Gender = model.Gender,
-                JoinedDate = joinedDate,
-                Type = model.Type,
-                Location = user.Location,
-                UserName = newname,
-                StaffCode = staffCode,
-                FirstLogin = true,
-                IsDisabled = false
-            };
-
-            var defaultPassword = $"{newname}@{model.DateofBirth.ToString("ddMMyyyy")}";
-
-            var result = await _userManager.CreateAsync(newUser, defaultPassword);
-
-            var userDTO = _mapper.Map<UserDTO>(newUser);
-            return userDTO;
+        int count = 0;
+        string newname = userName;
+        while (duplicatename != null)
+        {
+            count++;
+            newname = (userName + count.ToString());
+            duplicatename = await _context.Users.FirstOrDefaultAsync(p => p.UserName == newname);
         }
+        DateTime dateOfBirth = DateTime.Parse(model.DateofBirth.ToString());
+        DateTime joinedDate = DateTime.Parse(model.JoinedDate.ToString());
+
+        var staffCode = "SD0001";
+
+        int total = await _context.Users.CountAsync();
+        if (total >= 0)
+        {
+            total++;
+            staffCode = "SD" + total.ToString().PadLeft(4, '0');
+        }
+
+        var newUser = new User
+        {
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            DateofBirth = dateOfBirth,
+            Gender = model.Gender,
+            JoinedDate = joinedDate,
+            Type = model.Type,
+            Location = user.Location,
+            UserName = newname,
+            StaffCode = staffCode,
+            FirstLogin = true,
+            IsDisabled = false
+        };
+
+        var defaultPassword = $"{newname}@{model.DateofBirth.ToString("ddMMyyyy")}";
+
+        var result = await _userManager.CreateAsync(newUser, defaultPassword);
+
+        var userDTO = _mapper.Map<UserDTO>(newUser);
+        return userDTO;
+    }
 
         public async Task<List<UserModel>> FindUser(string find, User userLogin, string type)
         {
@@ -398,85 +396,132 @@ namespace RookieOnlineAssetManagement.Repositories
             return _mapper.Map<List<UserModel>>(users);
         }
 
-        public async Task<UserDTO> GetAsync(string staffCode)
+    public async Task<UserDTO> GetAsync(string staffCode)
+    {
+        var user = await _context.Users.Where(p => p.StaffCode == staffCode).FirstOrDefaultAsync();
+        var userDTO = _mapper.Map<UserDTO>(user);
+        return userDTO;
+    }
+
+    public async Task<UserEditDto> UpdateAsync(UserEditDto userDto)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.StaffCode == userDto.StaffCode);
+        if (user != null)
         {
-            var user = await _context.Users.Where(p => p.StaffCode == staffCode).FirstOrDefaultAsync();
-            var userDTO = _mapper.Map<UserDTO>(user);
-            return userDTO;
-        }
-
-        public async Task<UserEditDto> UpdateAsync(UserEditDto userDto)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.StaffCode == userDto.StaffCode);
-            if (user != null)
-            {
-                int age = ((int)((DateTime.Now - userDto.DateofBirth).TotalDays / 365));
-                if (age < 18 || age > 100)
-                {
-                    return null;
-                }
-
-                if (userDto.Gender != Gender.Female && userDto.Gender != Gender.Male)
-                {
-                    return null;
-                }
-                else
-                {
-                    user.Gender = userDto.Gender;
-                }
-                if (userDto.Type != UserType.Admin && userDto.Type != UserType.Staff)
-                {
-                    return null;
-                }
-                else
-                {
-                    user.Type = userDto.Type;
-                }
-
-                user.DateofBirth = userDto.DateofBirth;
-                user.JoinedDate = userDto.JoinedDate;
-
-                _context.Users.Update(user);
-
-                await _context.SaveChangesAsync();
-                return userDto;
-            }
-            else
+            int age = ((int)((DateTime.Now - userDto.DateofBirth).TotalDays / 365));
+            if (age < 18 || age > 100)
             {
                 return null;
             }
 
+            if (userDto.Gender != Gender.Female && userDto.Gender != Gender.Male)
+            {
+                return null;
+            }
+            else
+            {
+                user.Gender = userDto.Gender;
+            }
+            if (userDto.Type != UserType.Admin && userDto.Type != UserType.Staff)
+            {
+                return null;
+            }
+            else
+            {
+                user.Type = userDto.Type;
+            }
+
+            user.DateofBirth = userDto.DateofBirth;
+            user.JoinedDate = userDto.JoinedDate;
+
+            _context.Users.Update(user);
+
+            await _context.SaveChangesAsync();
+            return userDto;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public async Task AddLocation(string staffCode, string location)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync((x) => x.StaffCode == staffCode);
+        if (user != null)
+        {
+            user.Location = location;
+            await _context.SaveChangesAsync();
+        }
+    }
+    public async Task<int> CheckUserCanDeleteAsync(string staffCode)
+    {
+        var user = await _context.Users.Where(u => u.StaffCode == staffCode)
+            .Include(a => a.AssignedToAssignments)
+            .FirstOrDefaultAsync();
+        var countAssignment = user.AssignedToAssignments.Count();
+        return countAssignment;
+    }
+    public async Task<User> DeleteUserAsync(string staffCode)
+    {
+        User user = _context.Users.Where(s => s.StaffCode == staffCode).FirstOrDefault();
+
+        if (user != null)
+        {
+            user.IsDisabled = true;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task AddLocation(string staffCode, string location)
+        return user;
+    }
+
+    public async Task<UserPagingModel> GetUsersAsync(SearchParameters parameters, string location)
+    {
+        var searchString = (parameters.SearchString == null) ? "" : parameters.SearchString;
+        var userQuery = _userManager.Users
+            .Where(x => x.Location == location &&
+                (x.StaffCode.Contains(searchString) || (x.FirstName + x.LastName).Contains(searchString))
+            );
+        var userCount = userQuery.Count();
+        if (parameters.SortType)
         {
-            var user = await _context.Users.FirstOrDefaultAsync((x) => x.StaffCode == staffCode);
-            if (user != null)
+            switch (parameters.SortBy)
             {
-                user.Location = location;
-                await _context.SaveChangesAsync();
+                case "FullName":
+                    userQuery = userQuery.OrderBy(on => (on.FirstName + on.LastName).ToLower());
+                    break;
+                case "Type":
+                    userQuery = userQuery.OrderBy(on => on.Type);
+                    break;
+                default:
+                    userQuery = userQuery.OrderBy(on => on.StaffCode);
+                    break;
             }
         }
-        public async Task<Assignment> CheckUserCanDeleteAsync(string userId)
+        else
         {
-            var assignment = await _context.Assignments.Where(p => p.AssignedTo == userId).FirstOrDefaultAsync();
-            return assignment;
-        }
-        public async Task<User> DeleteUserAsync(string userId)
-        {
-            User user = _context.Users.Find(userId);
-
-            if (user != null)
+            switch (parameters.SortBy)
             {
-                var assignment = await _context.Assignments.Where(p => p.AssignedTo == userId).FirstOrDefaultAsync();
-                if (assignment == null)
-                {
-                    user.IsDisabled = true;
-                    await _context.SaveChangesAsync();
-                }
+                case "FullName":
+                    userQuery = userQuery.OrderByDescending(on => (on.FirstName + on.LastName).ToLower());
+                    break;
+                case "Type":
+                    userQuery = userQuery.OrderByDescending(on => on.Type);
+                    break;
+                default:
+                    userQuery = userQuery.OrderByDescending(on => on.StaffCode);
+                    break;
             }
-            return user;
         }
-
+        var users = await userQuery
+            .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+            .Take(parameters.PageSize)
+            .ToListAsync();
+        var usersDTO = _mapper.Map<List<UserDTO>>(users);
+        return new UserPagingModel
+        {
+            Total = userCount,
+            Users = usersDTO,
+        };
     }
 }

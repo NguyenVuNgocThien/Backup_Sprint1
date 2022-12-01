@@ -4,10 +4,11 @@ const { createSlice, createAsyncThunk } = require("@reduxjs/toolkit");
 
 const asset = createSlice({
     name: "assets",
-    initialState: { loading: false, assets: []},
+    initialState: { loading: false, assets: [],total:0},
     reducers: {
         loadAsset: (state, action) => {
-            state.assets = action.payload
+            state.assets = action.payload.assetList;
+            state.total = action.payload.assetTotal;
         }
     },
     extraReducers: builder => {
@@ -17,13 +18,13 @@ const asset = createSlice({
             })
             .addCase(fetchAssets.fulfilled,  (state, action) => {
                 state.loading = false;
-                state.assets = action.payload;
-                state.categories = action.payload;
+                state.assets = action.payload.assetList;
+                state.total = action.payload.assetTotal;
             })
             .addCase(fetchAssets.rejected,  (state, action) => {
                 state.loading = false;
                 state.assets = [];
-                state.categories = [];
+                state.total = 0;
             })
     }
 })
@@ -32,6 +33,6 @@ export const { loadAsset } = actions;
 export default reducer;
 
 export const fetchAssets = createAsyncThunk('assets/fetchAssets', async (data,thunkAPI) => {
-    const res = await assetApi.getListAsset(data.strFilterByState, data.strFilterByCategory, data.searchString, data.sort, data.sortBy);
+    const res = await assetApi.getListAsset(data.currentPage,data.strFilterByState, data.strFilterByCategory, data.searchString, data.sort, data.sortBy);
     return res;
 })

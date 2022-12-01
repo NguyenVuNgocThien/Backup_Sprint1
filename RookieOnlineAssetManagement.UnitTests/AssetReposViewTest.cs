@@ -76,13 +76,13 @@ namespace RookieOnlineAssetManagement.UnitTests
             string filerByState = "Available NotAvailable";
             string filterByCategory = "null";
             String searchString = "Laptop";
-            String sortBy ="Ascending";
+            String sortBy = "Ascending";
             String sort = "Asset Code";
             AssetRepository repository = new AssetRepository(_mapper, _context, _userManager.Object);
-            var result = repository.GetListAsset(useradmin,filerByState,filterByCategory, searchString ,sort, sortBy).Result;
+            var result = repository.GetListAsset(useradmin, filerByState, filterByCategory, searchString, sort, sortBy).Result;
             Assert.NotNull(result);
             Assert.NotEmpty(result);
-            Assert.Equivalent(_mapper.Map<List<AssetModel>>(_assets.Where(u => u.IsDisabled == false && u.Location == useradmin.Location )), result);
+            Assert.Equivalent(_mapper.Map<List<AssetModel>>(_assets.Where(u => u.IsDisabled == false && u.Location == useradmin.Location)), result);
         }
 
         public void Dispose()

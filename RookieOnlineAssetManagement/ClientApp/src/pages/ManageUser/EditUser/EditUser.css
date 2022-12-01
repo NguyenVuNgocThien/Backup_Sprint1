@@ -1,8 +1,8 @@
-.date-picker {
+.edit-user-form .date-picker {
     border: 3px solid #aaaaaa !important;
 }
 
-.date-picker__error-message {
+.edit-user-form .date-picker__error-message {
     border: 3px solid red !important;
 }
 

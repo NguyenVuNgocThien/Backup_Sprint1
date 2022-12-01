@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RookieOnlineAssetManagement.Data;
 using RookieOnlineAssetManagement.Entities;
-using RookieOnlineAssetManagement.InitializeData;
 using RookieOnlineAssetManagement.Interface;
 using RookieOnlineAssetManagement.Repositories;
 using System;
@@ -33,8 +32,10 @@ namespace RookieOnlineAssetManagement
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDatabaseDeveloperPageExceptionFilter();
+
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAssetRepository, AssetRepository>();
+            services.AddScoped<IAssignmentRepository, AssignmentRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddDefaultIdentity<User>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -45,7 +46,7 @@ namespace RookieOnlineAssetManagement
                 options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 6;
+                options.Password.RequiredLength = 8;
                 options.Password.RequiredUniqueChars = 1;
 
                 // Lockout settings.
