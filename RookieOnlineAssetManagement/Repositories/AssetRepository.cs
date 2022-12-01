@@ -100,8 +100,8 @@ public class AssetRepository : IAssetRepository
     }
     public async Task<AssetPagingViewModel> GetListAsset(int page,User userLogin, string filterByState, string filterByCategory, string searchString, string sort, string sortBy)
     {
-        var assignments = _context.Assignments.Include(a => a.Asset).Where(a => a.AssignedBy == userLogin.Id && a.IsDisabled == false);
-        var assetList = _context.Assets.Where(x => x.Location == userLogin.Location).Select(x => new AssetModel
+        var assignmentQuery = _context.Assignments.Include(a => a.Asset).Where(a => a.AssignedBy == userLogin.Id && a.IsDisabled == false);
+        var assetQuery = _context.Assets.Where(x => x.Location == userLogin.Location).Select(x => new AssetModel
         {
             AssetCode = x.AssetCode,
             AssetName = x.AssetName,
@@ -111,24 +111,24 @@ public class AssetRepository : IAssetRepository
             Location = userLogin.Location,
             Category = x.Category.Name
         }).OrderBy(x => x.AssetCode);
-        if (assignments != null)
+        if (assignmentQuery != null)
         {
-            List<string> strings = new List<string>();
-            foreach (var asset in assetList)
+            List<string> assetCodes = new List<string>();
+            foreach (var asset in assetQuery)
             {
-                if (assignments.FirstOrDefault(x => x.Asset.AssetCode == asset.AssetCode) != null)
+                if (assignmentQuery.FirstOrDefault(x => x.Asset.AssetCode == asset.AssetCode) != null)
                 {
                     if (asset.State == AssetState.Assigned)
                     {
-                        strings.Add(asset.AssetCode);
+                        assetCodes.Add(asset.AssetCode);
                     }
                 }
                 else
                 {
-                    strings.Add(asset.AssetCode);
+                    assetCodes.Add(asset.AssetCode);
                 }
             }
-            assetList = assetList.Where(x => strings.Contains(x.AssetCode)).OrderBy(x => x.AssetCode);
+            assetQuery = assetQuery.Where(x => assetCodes.Contains(x.AssetCode)).OrderBy(x => x.AssetCode);
         }
         if (filterByCategory != "null")
         {
@@ -137,16 +137,16 @@ public class AssetRepository : IAssetRepository
             {
                 if (category == "All")
                 {
-                    assetList=assetList.Where(x=>x.Category!="All").OrderBy(x=>x.AssetCode);
+                    assetQuery=assetQuery.Where(x=>x.Category!="All").OrderBy(x=>x.AssetCode);
                     break;
                 }
 
-                assetList=assetList.Where(on => listCategory.Contains(on.Category.Replace(" ",""))).OrderBy(x=>x.AssetCode);
+                assetQuery=assetQuery.Where(on => listCategory.Contains(on.Category.Replace(" ",""))).OrderBy(x=>x.AssetCode);
             }
         }
         if (searchString != "null")
         {
-            assetList= assetList.Where(x =>
+            assetQuery= assetQuery.Where(x =>
             (x.AssetCode.Replace(" ", "")
             .ToUpper()
             .Contains(searchString.Replace(" ", "").ToUpper())) ||
@@ -162,7 +162,7 @@ public class AssetRepository : IAssetRepository
             {
                 if (state == "All")
                 {
-                    assetList=assetList.Where(x=>x.State==AssetState.Assigned||
+                    assetQuery=assetQuery.Where(x=>x.State==AssetState.Assigned||
                     x.State == AssetState.Available|| x.State == AssetState.NotAvailable||
                     x.State == AssetState.WaitingForRecycling|| x.State == AssetState.Recycled).OrderBy(x=>x.AssetCode);
                     break;
@@ -172,23 +172,23 @@ public class AssetRepository : IAssetRepository
             }
             if (filterByState.Contains("All") == false)
             {
-                assetList = assetList.Where(x => states.Contains(x.State)).OrderBy(x => x.AssetCode);
+                assetQuery = assetQuery.Where(x => states.Contains(x.State)).OrderBy(x => x.AssetCode);
             }
         }
         if (sortBy == "Ascending")
             switch (sort)
             {
                 case "Asset Code":
-                    assetList= assetList.OrderBy(x => x.AssetCode);
+                    assetQuery= assetQuery.OrderBy(x => x.AssetCode);
                     break;
                 case "Asset Name":
-                    assetList = assetList.OrderBy(x => x.AssetName);
+                    assetQuery = assetQuery.OrderBy(x => x.AssetName);
                     break;
                 case "Category":
-                    assetList = assetList.OrderBy(x => x.Category);
+                    assetQuery = assetQuery.OrderBy(x => x.Category);
                     break;
                 case "State":
-                    assetList = assetList.OrderBy(x => x.State);
+                    assetQuery = assetQuery.OrderBy(x => x.State);
                     break;
             }
         else
@@ -196,39 +196,39 @@ public class AssetRepository : IAssetRepository
             switch (sort)
             {
                 case "Asset Code":
-                    assetList = assetList.OrderByDescending(x => x.AssetCode);
+                    assetQuery = assetQuery.OrderByDescending(x => x.AssetCode);
                     break;
                 case "Asset Name":
-                    assetList = assetList.OrderByDescending(x => x.AssetName);
+                    assetQuery = assetQuery.OrderByDescending(x => x.AssetName);
                     break;
                 case "Category":
-                    assetList = assetList.OrderByDescending(x => x.Category);
+                    assetQuery = assetQuery.OrderByDescending(x => x.Category);
                     break;
                 case "State":
-                    assetList = assetList.OrderByDescending(x => x.State);
+                    assetQuery = assetQuery.OrderByDescending(x => x.State);
                     break;
             }
         }
         int limit = 10;
-        var count = assetList.Count();
+        var assetTotal = assetQuery.Count();
         if (page > 0) page--;
-        if (count < limit)
+        if (assetTotal < limit)
         {
             page = 0;
-            limit = count;
+            limit = assetTotal;
         }
-        var ret = await assetList.Skip(page * limit).Take(limit).ToListAsync();
+        var assetList = await assetQuery.Skip(page * limit).Take(limit).ToListAsync();
         return new AssetPagingViewModel
         {
-            AssetTotal = count,
-            AssetList = ret,
+            AssetTotal = assetTotal,
+            AssetList = assetList,
 
         };
     }
 
     public async Task<List<AssetHistoryModel>> GetListHistoryOfAsset(string assetCode)
     {
-        var assignments = _context.Assignments.Include(a => a.Asset).Where(a => a.Asset.AssetCode == assetCode).Select(a => new AssignmentHistoryDTO
+        var assignmentQuery = _context.Assignments.Include(a => a.Asset).Where(a => a.Asset.AssetCode == assetCode).Select(a => new AssignmentHistoryDTO
         {
             AssignedBy = a.AssignedByUser.UserName,
             AssignedTo = a.AssignedToUser.UserName
@@ -241,7 +241,7 @@ public class AssetRepository : IAssetRepository
         {
             InstalledDate = a.InstalledDate,
             ReturningRequestHistory = returningRequests.ToList(),
-            AssignmentHistory = assignments.ToList()
+            AssignmentHistory = assignmentQuery.ToList()
         });
         return await assets.ToListAsync();
     }
