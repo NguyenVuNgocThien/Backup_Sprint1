@@ -23,7 +23,7 @@ export default function ManageAssignment() {
     const [categoryList, setCategoryList] = useState([])
     const [checkList, setCheckList] = useState([])
     const [listHistory, setListHistory] = useState([])
-    const [sortBy, setSortBy] = useState("Descending");
+    const [sortBy, setSortBy] = useState("Ascending");
     const [pageCurrent, setPageCurrent] = useState(1);
     let strState = ""
     let strCategory = ""
@@ -200,13 +200,13 @@ export default function ManageAssignment() {
             param.strFilterByCategory = strFilterByCategory;
         }
         param.sort = "Asset Code"
-        if (sortBy === "Descending") {
-            setSortBy("Ascending")
-            param.sortBy = "Ascending"
-        }
-        else {
+        if (sortBy === "Ascending") {
             setSortBy("Descending")
             param.sortBy = "Descending"
+        }
+        else {
+            setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         setParam(param)
         dispatch(fetchAssets(param))
@@ -222,13 +222,13 @@ export default function ManageAssignment() {
             param.strFilterByCategory = strFilterByCategory;
         }
         param.sort = "Asset Name"
-        if (sortBy === "Descending") {
-            setSortBy("Ascending")
-            param.sortBy = "Ascending"
-        }
-        else {
+        if (sortBy === "Ascending") {
             setSortBy("Descending")
             param.sortBy = "Descending"
+        }
+        else {
+            setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         setParam(param)
         dispatch(fetchAssets(param))
@@ -244,13 +244,13 @@ export default function ManageAssignment() {
             param.strFilterByCategory = strFilterByCategory;
         }
         param.sort = "Category"
-        if (sortBy === "Descending") {
-            setSortBy("Ascending")
-            param.sortBy = "Ascending"
-        }
-        else {
+        if (sortBy === "Ascending") {
             setSortBy("Descending")
             param.sortBy = "Descending"
+        }
+        else {
+            setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         setParam(param)
         dispatch(fetchAssets(param))
@@ -268,13 +268,13 @@ export default function ManageAssignment() {
         param.sort = "State"
         dispatch(fetchAssets(param))
         setAssetList(list)
-        if (sortBy === "Descending") {
-            setSortBy("Ascending")
-            param.sortBy="Ascending"
+        if (sortBy === "Ascending") {
+            setSortBy("Descending")
+            param.sortBy = "Descending"
         }
         else {
-            setSortBy("Descending")
-            param.sortBy="Descending"
+            setSortBy("Ascending")
+            param.sortBy = "Ascending"
         }
         setParam(param)
     }

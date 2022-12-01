@@ -1,4 +1,4 @@
-import userApi from "../api/userAPI";
+import userApi from "api/userAPI";
 
 const { createSlice, createAsyncThunk } = require("@reduxjs/toolkit");
 

@@ -7,6 +7,7 @@ using RookieOnlineAssetManagement.Interface;
 using Microsoft.AspNetCore.Identity;
 using RookieOnlineAssetManagement.Entities;
 using System;
+using System.Linq;
 
 namespace RookieOnlineAssetManagement.Controllers
 {
@@ -51,7 +52,7 @@ namespace RookieOnlineAssetManagement.Controllers
         {
             var assignment = await _assignmentRepository.AcceptAssignmentById(id);
             if (assignment != null)
-            {
+        {
                 return NoContent();
             } else
             {
@@ -89,6 +90,43 @@ namespace RookieOnlineAssetManagement.Controllers
                 nameof(GetAssignmentById),
                 new { id = newAssignment.Id },
                 newAssignment);
+        }
+
+        [HttpGet("GetAllAssignments")]
+        public async Task<ActionResult<List<AssignmentGetDTO>>> GetAllAssignments()
+        {
+            var assignmentList = await _assignmentRepository.GetAllAsync();
+            return Ok(assignmentList);
+        }
+
+        [HttpGet("GetAssignmentsByPage")]
+        public async Task<ActionResult<List<AssignmentGetDTO>>> GetAssignmentsByPage([FromQuery] PaginationParameters paginationParameters)
+        {
+            var validPaginationParameters = new PaginationParameters(paginationParameters.PageNumber, paginationParameters.PageSize);
+            var assignmentList = await _assignmentRepository.GetByPage(validPaginationParameters.PageNumber, validPaginationParameters.PageSize);
+            return Ok(assignmentList);
+        }
+
+        [HttpGet("GetAssignmentNumber")]
+        public async Task<ActionResult<int>> GetAssignmentNumber()
+        {
+            var assignmentsCount = await _assignmentRepository.CountAllAsync();
+            return Ok(assignmentsCount);
+        }
+        
+        [HttpPost("GetAssignmentNumberAfterFilter")]
+        public async Task<ActionResult<int>> GetAssignmentNumberAfterFilter(AssignmentFilters filters)
+        {
+            var assignmentsCount = await _assignmentRepository.CountAssignmentsAfterFilterAsync(filters);
+            return Ok(assignmentsCount);
+        }
+        
+        [HttpPost("GetAssignmentsByFilters")]
+        public async Task<ActionResult<List<AssignmentGetDTO>>> GetAssignmentsByFilters([FromQuery] PaginationParameters paginationParameters, AssignmentFilters filters)
+        {
+            var validPaginationParameters = new PaginationParameters(paginationParameters.PageNumber, paginationParameters.PageSize);
+            var assignmentList = await _assignmentRepository.GetAssignmentsByFilters(validPaginationParameters.PageNumber, validPaginationParameters.PageSize, filters);
+            return Ok(assignmentList);
         }
     }
 }

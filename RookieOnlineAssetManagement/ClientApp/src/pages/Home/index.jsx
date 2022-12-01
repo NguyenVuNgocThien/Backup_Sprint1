@@ -101,7 +101,7 @@ export default function Home() {
     const HandleOpenModalConfirm = (assignmentId, isaccept) => {
         if (isaccept)
             isAccept.current = true;
-        else 
+        else
             isAccept.current = false;
 
         setAssignmentId(assignmentId)
@@ -119,7 +119,7 @@ export default function Home() {
 
     const HandleAcceptAssignment = () => {
         const data = {
-            id: assignmentId, 
+            id: assignmentId,
             currentPage: page,
             pageSize: pageSize.current
         }
@@ -128,7 +128,7 @@ export default function Home() {
     }
     const HandleDeclineAssignment = () => {
         const data = {
-            id: assignmentId, 
+            id: assignmentId,
             pageSize: pageSize.current
         }
         dispatch(declineAssignment(data));
@@ -139,28 +139,38 @@ export default function Home() {
         paglink[1].firstChild.click();
     }
 
-
     function FormatDateTime(datetime) {
-        let date = `${datetime.split("T")[0].split("-")[2]}/${datetime.split("T")[0].split("-")[1]}/${datetime.split("T")[0].split("-")[0]}`;
-        return `${date}`;
+        if (datetime != null) {
+            let date = `${datetime.split("T")[0].split("-")[2]}/${datetime.split("T")[0].split("-")[1]}/${datetime.split("T")[0].split("-")[0]}`;
+            return date;
+        }
+        return "";
     }
     function CompactText(text) {
         var result = "";
-        if (text.split('').length <= 15)
-            return text;
+        if (text != null) {
+            if (text.length <= 15)
+                return text;
 
-        else {
-            for (var i = 0; i < 15; i++) {
-                result = result.concat(text.split('')[i])
+            else {
+                for (var i = 0; i < 15; i++) {
+                    result = result.concat(text.split('')[i])
+                }
+                return result + "...";
             }
-            return result + "...";
         }
+        else
+            return result;
     }
     function HandleDisplayAssignmentState(assignmentState) {
-        if (assignmentState === 1)
-            return "Accepted";
-        else if (assignmentState === 2)
-            return "Waiting For Acceptance";
+        if (assignmentState != null) {
+            if (assignmentState === 1)
+                return "Accepted";
+            else if (assignmentState === 2)
+                return "Waiting For Acceptance";
+        }
+        else 
+            return "";
     }
 
 
@@ -252,7 +262,7 @@ export default function Home() {
                                                     >
                                                         <p className="m-0">{CompactText(item.assetName)}</p>
                                                     </OverlayTrigger>
-                                                    
+
                                                 </div>
                                                 <hr className="m-0 me-3" />
                                             </td>

@@ -79,9 +79,9 @@ namespace RookieOnlineAssetManagement.UnitTests
             String sortBy = "Ascending";
             String sort = "Asset Code";
             AssetRepository repository = new AssetRepository(_mapper, _context, _userManager.Object);
-            var result = repository.GetListAsset(useradmin, filerByState, filterByCategory, searchString, sort, sortBy).Result;
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
+            var result = repository.GetListAsset(1, useradmin, filerByState, filterByCategory, searchString, sort, sortBy).Result;
+            Assert.NotNull(result.AssetList);
+            Assert.NotEmpty(result.AssetList);
             Assert.Equivalent(_mapper.Map<List<AssetModel>>(_assets.Where(u => u.IsDisabled == false && u.Location == useradmin.Location)), result);
         }
 

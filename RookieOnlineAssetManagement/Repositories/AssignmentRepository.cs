@@ -7,11 +7,14 @@ using RookieOnlineAssetManagement.Entities;
 using RookieOnlineAssetManagement.Enum;
 using RookieOnlineAssetManagement.Interface;
 using RookieOnlineAssetManagement.Models;
+using System.Collections.Generic;
 using System.Linq;
 using RookieOnlineAssetManagement.Models.Assignment;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Generic;
 
 namespace RookieOnlineAssetManagement.Repositories;
+
 public class AssignmentRepository : IAssignmentRepository, IDisposable
 {
     private readonly IMapper _mapper;
@@ -27,80 +30,56 @@ public class AssignmentRepository : IAssignmentRepository, IDisposable
     {
         // Query data
         var query = _context.Assignments
-            .Where(m => m.AssignedTo == userId &&
-                    m.IsDisabled == false &&
-                    m.AssignedDate.Date <= DateTime.Today)
-            .Include(m => m.Asset)
-            .Include(m => m.Asset.Category)
-            .Select(m => new AssignmentViewDTO
-            {
-                AssignmentId = m.Id,
-                AssetCode = m.Asset.AssetCode,
-                AssetName = m.Asset.AssetName,
-                Category = m.Asset.Category.Name,
-                AssignedDate = m.AssignedDate,
-                State = m.State
-            });
+                    .Include(m => m.Asset)
+                    .Include(m => m.Asset.Category)
+                    .Where(m => m.AssignedTo == userId &&
+                                m.IsDisabled == false &&
+                                m.AssignedDate.Date <= DateTime.Today);
 
         // Sort
-        if (!string.IsNullOrEmpty(fieldName) && fieldName == "assetCode")
+        if (!string.IsNullOrEmpty(fieldName))
         {
             if (sortType == "asc")
             {
-                query = query.OrderBy(m => m.AssetCode);
-
+                switch (fieldName)
+                {
+                    case "assetCode":
+                        query = query.OrderBy(m => m.Asset.AssetCode);
+                        break;
+                    case "assetName":
+                        query = query.OrderBy(m => m.Asset.AssetName);
+                        break;
+                    case "category":
+                        query = query.OrderBy(m => m.Asset.Category.Name);
+                        break;                    
+                    case "assignedDate":
+                        query = query.OrderBy(m => m.AssignedDate);
+                        break;                    
+                    case "state":
+                        query = query.OrderBy(m => m.State);
+                        break;
+                }
             }
             else if (sortType == "desc")
             {
-                query = query.OrderByDescending(m => m.AssetCode);
-            }
-        }
-        else if (!string.IsNullOrEmpty(fieldName) && fieldName == "assetName")
-        {
-            if (sortType == "asc")
-            {
-                query = query.OrderBy(m => m.AssetName);
-
-            }
-            else if (sortType == "desc")
-            {
-                query = query.OrderByDescending(m => m.AssetName);
-            }
-        }
-        else if (!string.IsNullOrEmpty(fieldName) && fieldName == "category")
-        {
-            if (sortType == "asc")
-            {
-                query = query.OrderBy(m => m.Category);
-
-            }
-            else if (sortType == "desc")
-            {
-                query = query.OrderByDescending(m => m.Category);
-            }
-        }
-        else if (!string.IsNullOrEmpty(fieldName) && fieldName == "assignedDate")
-        {
-            if (sortType == "asc")
-            {
-                query = query.OrderBy(m => m.AssignedDate);
-
-            }
-            else if (sortType == "desc")
-            {
-                query = query.OrderByDescending(m => m.AssignedDate);
-            }
-        }
-        else if (!string.IsNullOrEmpty(fieldName) && fieldName == "state")
-        {
-            if (sortType == "asc")
-            {
-                query = query.OrderBy(m => m.State);
-
-            }
-            else if (sortType == "desc")
-            {
-                query = query.OrderByDescending(m => m.State);
+                switch (fieldName)
+                {
+                    case "assetCode":
+                        query = query.OrderByDescending(m => m.Asset.AssetCode);
+                        break;
+                    case "assetName":
+                        query = query.OrderByDescending(m => m.Asset.AssetName);
+                        break;
+                    case "category":
+                        query = query.OrderByDescending(m => m.Asset.Category.Name);
+                        break;
+                    case "assignedDate":
+                        query = query.OrderByDescending(m => m.AssignedDate);
+                        break;
+                    case "state":
+                        query = query.OrderByDescending(m => m.State);
+                        break;
+                }
             }
         }
 
@@ -108,9 +87,12 @@ public class AssignmentRepository : IAssignmentRepository, IDisposable
         int page = queryPage.GetValueOrDefault(1) == 0 ? 1 : queryPage.GetValueOrDefault(1);
         var total = query.Count();
 
+        query = query.Skip((page - 1) * limit).Take(limit);
+        var assignmentDTO = _mapper.Map<List<AssignmentViewDTO>>(query.ToList());
+
         return new AssignmentPagingModel
         {
-            Assignments = query.Skip((page - 1) * limit).Take(limit),
+            Assignments = assignmentDTO,
             TotalItem = total,
             Page = page,
             LastPage = (int)Math.Ceiling(Decimal.Divide(total, limit))
@@ -124,18 +106,10 @@ public class AssignmentRepository : IAssignmentRepository, IDisposable
             .Include(m => m.AssignedToUser)
             .Include(m => m.AssignedByUser)
             .Include(m => m.Asset.Category)
-            .Select(m => new AssignmentDetailDTO
-            {
-                AssetCode = m.Asset.AssetCode,
-                AssetName = m.Asset.AssetName,
-                Specification = m.Asset.Specification,
-                AssignedTo = m.AssignedToUser.UserName,
-                AssignedBy = m.AssignedByUser.UserName,
-                AssignedDate = m.AssignedDate,
-                State = m.State,
-                Note = m.Note
-            }).FirstOrDefaultAsync();
-        return assignment;
+            .FirstOrDefaultAsync();
+
+        var assignmentDTO = _mapper.Map<AssignmentDetailDTO>(assignment);
+        return assignmentDTO;
     }
     public async Task<Assignment> AcceptAssignmentById(int assignmentId)
     {
@@ -205,5 +179,106 @@ public class AssignmentRepository : IAssignmentRepository, IDisposable
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    public async Task<int> CountAllAsync()
+    {
+        var availableAssignmentsNumber = await _context.Assignments.Where(assignment => assignment.IsDisabled == false).CountAsync();
+        return availableAssignmentsNumber;
+    }
+
+    public async Task<List<AssignmentGetDTO>> GetAllAsync()
+    {
+        var assignmentList = await _context.Assignments
+            .Where(assignment => assignment.IsDisabled == false)
+            .Include(a => a.Asset)
+            .Include(a => a.AssignedToUser)
+            .Include(a => a.AssignedByUser)
+            .ToListAsync();
+        var assignmentDTOList = _mapper.Map<List<AssignmentGetDTO>>(assignmentList);
+        return assignmentDTOList;
+    }
+
+    public async Task<List<AssignmentGetDTO>> GetAssignmentsByFilters(int pageNumber, int pageSize, AssignmentFilters filters)
+    {
+        var assignmentQuery = _context.Assignments
+            .Include(a => a.Asset)
+            .Include(a => a.AssignedToUser)
+            .Include(a => a.AssignedByUser)
+            .Where(assignment => assignment.IsDisabled == false 
+                // if state is All, take all, else take accepted or WaitingForAcceptance assignments
+                && (filters.State == "All" || assignment.State == (filters.State == "Accepted" ? Enum.AssignmentState.Accepted : Enum.AssignmentState.WaitingForAcceptance))
+                // if assignedDate is null, take all, else take assignments that have the samme assignedDate
+                && (filters.AssignedDate == null || assignment.AssignedDate.Date == filters.AssignedDate.Value.Date)
+                && (assignment.Asset.AssetCode.Contains(filters.SearchWords.ToUpper())                         // search assetcode
+                    || assignment.Asset.AssetName.ToUpper().Contains(filters.SearchWords.ToUpper())             // search assetname
+                    || assignment.AssignedToUser.UserName.ToUpper().Contains(filters.SearchWords.ToUpper()))    // search assignee's username
+                );
+
+        if (filters.SortType == "asc")
+        {
+            assignmentQuery = filters.SortBy switch
+            {
+                "AssetCode" => assignmentQuery.OrderBy(a => a.Asset.AssetCode),
+                "AssetName" => assignmentQuery.OrderBy(a => a.Asset.AssetName),
+                "AssignedTo" => assignmentQuery.OrderBy(a => a.AssignedTo),
+                "AssignedBy" => assignmentQuery.OrderBy(a => a.AssignedBy),
+                "AssignedDate" => assignmentQuery.OrderBy(a => a.AssignedDate),
+                "State" => assignmentQuery.OrderBy(a => a.State),
+                _ => assignmentQuery.OrderBy(a => a.Id),
+            };
+        }
+        if (filters.SortType == "desc")
+        {
+            assignmentQuery = filters.SortBy switch
+            {
+                "AssetCode" => assignmentQuery.OrderByDescending(a => a.Asset.AssetCode),
+                "AssetName" => assignmentQuery.OrderByDescending(a => a.Asset.AssetName),
+                "AssignedTo" => assignmentQuery.OrderByDescending(a => a.AssignedTo),
+                "AssignedBy" => assignmentQuery.OrderByDescending(a => a.AssignedBy),
+                "AssignedDate" => assignmentQuery.OrderByDescending(a => a.AssignedDate),
+                "State" => assignmentQuery.OrderByDescending(a => a.State),
+                _ => assignmentQuery.OrderByDescending(a => a.Id),
+            };
+        }
+
+        var sortedAssignmentList = await assignmentQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        var assignmentDTOList = _mapper.Map<List<AssignmentGetDTO>>(sortedAssignmentList);
+        return assignmentDTOList;
+    }
+
+    public async Task<List<AssignmentGetDTO>> GetByPage(int pageNumber, int pageSize)
+    {
+        var assignmentList = await _context.Assignments
+            .Where(assignment => assignment.IsDisabled == false)
+            .Include(a => a.Asset)
+            .Include(a => a.AssignedToUser)
+            .Include(a => a.AssignedByUser)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        var assignmentDTOList = _mapper.Map<List<AssignmentGetDTO>>(assignmentList);
+        return assignmentDTOList;
+    }
+
+    public async Task<int> CountAssignmentsAfterFilterAsync(AssignmentFilters filters)
+    {
+        var assignmentsNumber = await _context.Assignments
+            .Include(a => a.Asset)
+            .Include(a => a.AssignedToUser)
+            .Include(a => a.AssignedByUser)
+            .Where(assignment => assignment.IsDisabled == false // take all except disable assignments
+                // if state is All, take all, else take accepted or WaitingForAcceptance assignments
+                && (filters.State == "All" || assignment.State == (filters.State == "Accepted" ? Enum.AssignmentState.Accepted : Enum.AssignmentState.WaitingForAcceptance))
+                // if assignedDate is null, take all, else take assignments that have the samme assignedDate
+                && (filters.AssignedDate == null || assignment.AssignedDate.Date == filters.AssignedDate.Value.Date)
+                && (assignment.Asset.AssetCode.Contains(filters.SearchWords.ToUpper())                         // search assetcode
+                    || assignment.Asset.AssetName.ToUpper().Contains(filters.SearchWords.ToUpper())             // search assetname
+                    || assignment.AssignedToUser.UserName.ToUpper().Contains(filters.SearchWords.ToUpper()))    // search assignee's username
+            ).CountAsync();
+        return assignmentsNumber;
     }
 }

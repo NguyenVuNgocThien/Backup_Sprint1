@@ -7,16 +7,23 @@ const ModalDetail = (props) => {
     let assignmentDetail = useSelector((state) => state.home.assignment);
 
     function HandleDisplayAssignmentState(assignmentState) {
-        if (assignmentState === 1)
-            return "Accepted";
-        else if (assignmentState === 2)
-            return "Waiting For Acceptance";
+        if (assignmentState != null) {
+            if (assignmentState === 1)
+                return "Accepted";
+            else if (assignmentState === 2)
+                return "Waiting For Acceptance";
+        }
+        else 
+            return "";
     }
     function FormatDateTime(datetime) {
-        let date = `${datetime.split("T")[0].split("-")[2]}/${datetime.split("T")[0].split("-")[1]}/${datetime.split("T")[0].split("-")[0]}`;
-        return `${date}`;
+        if (datetime != null) {
+            let date = `${datetime.split("T")[0].split("-")[2]}/${datetime.split("T")[0].split("-")[1]}/${datetime.split("T")[0].split("-")[0]}`;
+            return date;
+        }
+        return "";
     }
-
+    
     return (
         <React.Fragment>
             <Modal

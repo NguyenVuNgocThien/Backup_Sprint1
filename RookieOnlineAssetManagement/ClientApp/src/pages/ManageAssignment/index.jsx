@@ -1,132 +1,420 @@
-import { getAssignmentById } from "api/AssignmentService";
 import React, { useEffect, useState } from "react";
-import { BsArrowCounterclockwise } from "react-icons/bs";
-import { IoCloseSharp } from "react-icons/io5";
-import { MdDone } from "react-icons/md";
-import { useLocation, useNavigate } from "react-router-dom";
-import { GetDateDMY } from "utils";
-const ManageAssignment = () => {
-    const navigate = useNavigate()
-    const location = useLocation()
+import {
+    Form,
+    Dropdown,
+    Table,
+    ButtonGroup,
+    InputGroup,
+} from "react-bootstrap";
+import DatePicker from "react-datepicker";
+import { BsFillCalendarDateFill } from "react-icons/bs";
+import AssignmentRow from "./AssignmentRow";
+import assignmentApi from "api/assignmentApi";
+import PaginationComponent from "./AssignmentPagination";
+import "./ManageAssignment.css";
+import { GetDate } from "utils";
 
-    const CreateAssignment = () => {
-        navigate("/manage-assignment/create-new-assignment")
-    }
-
-    // tuy chinh header, sua dung field tra ve tu backend
-    const headers = ["No.", "Asset Code", "Asset Name", "Assigned to", "Assigned by", "Assigned Date", "State"]
-    const fields = ["assetCode", "assetName", "assignedTo", "assignedBy", "assignedDate", "state"]
-
-    //sua dung truong, co api thi them use effect
-    const [assignments, setAssignments] = useState([
-        {
-            id: "LA101002",
-            assetCode: "LA101002",
-            assetName: "Laptop HP Probook 450 G1",
-            assignedTo: "manhnq",
-            assignedBy: "duyn",
-            assignedDate: "10/04/2019",
-            state: "Waiting for acceptance",
-        },
-        {
-            id: "LA101003",
-            assetCode: "LA101003",
-            assetName: "Laptop HP Probook 450 G1",
-            assignedTo: "manhnq",
-            assignedBy: "duyn",
-            assignedDate: "10/04/2019",
-            state: "Accepted",
-        },
-        {
-            id: "MO101004",
-            assetCode: "MO101004",
-            assetName: "Monitor Dell UltraSharp",
-            assignedTo: "manhnq",
-            assignedBy: "duyn",
-            assignedDate: "20/03/2021",
-            state: "Waiting for acceptance",
-        },
-    ])
+export default function ManageAssignment() {
+    const itemsPerPage = 5;
+    const [filterDate, setFilterDate] = useState(null);
+    const [assignmentList, setAssignmentList] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsNumber, setItemsNumber] = useState(5);
+    const [filters, setFilters] = useState({
+        State: [],
+        AssignedDate: null,
+        KeyWord: "",
+        SortBy: "No",
+        SortType: true
+    });
 
     useEffect(() => {
-        if (location.state !== null) {
-            let id = location.state.id
-            getAssignmentById(id).then((response) => {
-                let assignment = response.data;
-                assignment.assignedDate = GetDateDMY(new Date(assignment.assignedDate))
-                assignment.state = assignment.state === 2 ? "Waiting for acceptance" : "Accepted"
-                setAssignments((assignments) =>
-                    [assignment, ...assignments.filter(assignment => assignment.id !== id)])
+        const validFilter = {
+            State:
+                filters.State.includes("All") ||
+                filters.State.length >= 2 ||
+                filters.State.length === 0
+                    ? "All"
+                    : filters.State[0],
+            AssignedDate:
+                filters.AssignedDate == null
+                    ? null
+                    : GetDate(filters.AssignedDate),
+            SearchWords: filters.KeyWord,
+            SortBy: "No",
+            SortType: filters.SortType ? "asc" : "desc"
+        };
+
+        assignmentApi
+            .GetAssignmentNumberAfterFilter(validFilter)
+            .then((response) => {
+                setItemsNumber(response);
             })
-            window.history.replaceState({}, document.title);
+            .catch((error) => console.log(error));
+    }, [])
+
+    useEffect(() => {
+        const validFilter = {
+            State:
+                filters.State.includes("All") ||
+                filters.State.length >= 2 ||
+                filters.State.length === 0
+                    ? "All"
+                    : filters.State[0],
+            AssignedDate:
+                filters.AssignedDate == null
+                    ? null
+                    : GetDate(filters.AssignedDate),
+            SearchWords: filters.KeyWord,
+            SortBy: filters.SortBy,
+            SortType: filters.SortType ? "asc" : "desc"
+        };
+
+        assignmentApi
+            .GetAssignmentsByFilters(validFilter, currentPage, itemsPerPage)
+            .then((response) => {
+                setAssignmentList(response);
+            })
+            .catch((error) => console.log(error));
+    }, [currentPage]);
+
+    useEffect(() => {
+        setFilters({
+            State: filters.State,
+            AssignedDate: filterDate,
+            KeyWord: filters.KeyWord,
+            SortBy: filters.SortBy,
+            SortType: filters.SortType
+        });
+    }, [filterDate]);
+
+    const handleChangeSortPrams = (event, fieldName) => {
+        setFilters({
+            State: filters.State,
+            AssignedDate: filters.AssignedDate,
+            KeyWord: filters.KeyWord,
+            SortBy: fieldName,
+            SortType: !filters.SortType
+        });
+
+        const validFilter = {
+            State:
+            filters.State.includes("All") ||
+            filters.State.length >= 2 ||
+            filters.State.length === 0
+            ? "All"
+            : filters.State[0],
+            AssignedDate:
+            filters.AssignedDate == null
+            ? null
+            : GetDate(filters.AssignedDate),
+            SearchWords: filters.KeyWord,
+            SortBy: fieldName,
+            SortType: !filters.SortType ? 'asc' : 'desc'
+        };
+        
+        assignmentApi
+            .GetAssignmentNumberAfterFilter(validFilter)
+            .then((response) => {
+                setItemsNumber(response);
+            })
+            .catch((error) => console.log(error));
+
+        assignmentApi
+            .GetAssignmentsByFilters(validFilter, 1, itemsPerPage)
+            .then((response) => {
+                setAssignmentList(response);
+                setCurrentPage(1);
+            })
+            .catch((error) => console.log(error));
+
+    }
+
+    const handleChangeStateFilters = (e) => {
+        const { value, checked } = e.target;
+
+        if (checked) {
+            setFilters({
+                State: [...filters.State, value],
+                AssignedDate: filters.AssignedDate,
+                KeyWord: filters.KeyWord,
+                SortBy: filters.SortBy,
+                SortType: filters.SortType
+            });
+        } else {
+            setFilters({
+                State: filters.State.filter((element) => element !== value),
+                AssignedDate: filterDate,
+                KeyWord: filters.KeyWord,
+                SortBy: filters.SortBy,
+                SortType: filters.SortType
+            });
         }
-    }, [location.state])
+    };
+
+    const handleChangeSearchWord = (e) => {
+        const value = e.target.value;
+        setFilters({
+            State: filters.State,
+            AssignedDate: filters.AssignedDate,
+            KeyWord: value,
+            SortBy: filters.SortBy,
+            SortType: filters.SortType
+        });
+    };
+
+    const handleSubmitFilters = () => {
+        const validFilter = {
+            State:
+            filters.State.includes("All") ||
+            filters.State.length >= 2 ||
+            filters.State.length === 0
+            ? "All"
+            : filters.State[0],
+            AssignedDate:
+            filters.AssignedDate == null
+            ? null
+            : GetDate(filters.AssignedDate),
+            SearchWords: filters.KeyWord,
+            SortBy: filters.SortBy,
+            SortType: filters.SortType ? 'asc' : 'desc'
+        };
+        
+        assignmentApi
+            .GetAssignmentNumberAfterFilter(validFilter)
+            .then((response) => {
+                setItemsNumber(response);
+            })
+            .catch((error) => console.log(error));
+
+        assignmentApi
+            .GetAssignmentsByFilters(validFilter, 1, itemsPerPage)
+            .then((response) => {
+                setAssignmentList(response);
+                setCurrentPage(1);
+            })
+            .catch((error) => console.log(error));
+    };
 
     return (
         <div>
-            <div className="page-title">Assignment</div>
-            <div className="row">
-                <div className="col-sm-9">
-                </div>
+            <div style={{ marginTop: "150px", fontSize: "2px" }}>
+                <div className="row">
+                    <h4 className="page-title">Assignment</h4>
+                    <div className="col-sm-3 text-start">
+                        <Dropdown as={ButtonGroup} align="start" size="sm">
+                            <Dropdown.Toggle
+                                variant="outline-dark"
+                                style={{
+                                    minWidth: "150px",
+                                    maxWidth: "200px",
+                                    width: "100%",
+                                    textAlign: "left",
+                                    paddingLeft: "10px",
+                                }}
+                            >
+                                State
+                            </Dropdown.Toggle>
 
-                <div className="col-sm-3 text-end">
-                    <button className="btn btn-danger btn-sm" onClick={CreateAssignment}>
-                        Create New Assignment
-                    </button>
+                            <button
+                                className="btn btn-outline-secondary"
+                                type="button"
+                                id="button-addon2"
+                                style={{ maxWidth: "40px" }}
+                                onClick={() => handleSubmitFilters()}
+                            >
+                                <i className="bi bi-funnel-fill"></i>
+                            </button>
+                            <Dropdown.Menu
+                                style={{
+                                    minWidth: "130px",
+                                    maxWidth: "250px",
+                                    padding: "10px",
+                                }}
+                            >
+                                <Form.Check
+                                    type="checkbox"
+                                    id="All"
+                                    label="All"
+                                    value="All"
+                                    onChange={handleChangeStateFilters}
+                                />
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Admin"
+                                    label="Accepted"
+                                    value="Accepted"
+                                    onChange={handleChangeStateFilters}
+                                />
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Staff"
+                                    label="Waiting for acceptance"
+                                    value="WaitingForAcceptance"
+                                    onChange={handleChangeStateFilters}
+                                />
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+                    <div className="col-sm-3 text-start">
+                        <InputGroup
+                            size="sm"
+                            className="mb-3"
+                            style={{
+                                height: "35px",
+                                maxWidth: "250px",
+                                minWidth: "150px",
+                            }}
+                        >
+                            <DatePicker
+                                selected={filterDate}
+                                autoComplete="on"
+                                dateFormat="dd/MM/yyyy"
+                                showMonthDropdown
+                                showYearDropdown
+                                dropdownMode="select"
+                                placeholderText="Assigned Date"
+                                onChange={(date) => setFilterDate(date)}
+                                className="form-control"
+                            ></DatePicker>
+                            <span
+                                className="input-group-text btn btn-outline-secondary"
+                                style={{
+                                    position: "absolute",
+                                    right: "0px",
+                                    height: "100%",
+                                }}
+                                onClick={handleSubmitFilters}
+                            >
+                                <BsFillCalendarDateFill />
+                            </span>
+                        </InputGroup>
+                    </div>
+                    <div className="col-sm-3 text-end d-flex justify-content-end">
+                        <div
+                            className="input-group mb-3 input-group-sm"
+                            style={{ height: "30px", maxWidth: "250px" }}
+                        >
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Search"
+                                name="search"
+                                value={filters.KeyWord}
+                                onChange={(e) => handleChangeSearchWord(e)}
+                            ></input>
+                            <button
+                                className="btn btn-outline-secondary"
+                                type="button"
+                                onClick={handleSubmitFilters}
+                            >
+                                <i className="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div className="col-sm-3 text-end">
+                        <button className="btn btn-danger btn-sm">
+                            Create new assignment
+                        </button>
+                    </div>
+                </div>
+                <div className="row">
+                    <Table>
+                        <thead>
+                            <tr>
+                                <th className="cursor-pointer" value="No">
+                                    <div onClick={(e) => handleChangeSortPrams(e, "No")}>
+                                        No.
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th
+                                    className="cursor-pointer"
+                                    value="Asset Code"
+                                >
+                                    <div onClick={(e) => handleChangeSortPrams(e, "AssetCode")} >
+                                        Asset Code
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th
+                                    className="cursor-pointer"
+                                    value="Asset Name"
+                                >
+                                    <div onClick={(e) => handleChangeSortPrams(e, "AssetName")}>
+                                        Asset Name
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th
+                                    className="cursor-pointer"
+                                    value="Assigned to"
+                                >
+                                    <div onClick={(e) => handleChangeSortPrams(e, "AssignedTo")}>
+                                        Assigned to
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th
+                                    className="cursor-pointer"
+                                    value="Assigned by"
+                                >
+                                    <div onClick={(e) => handleChangeSortPrams(e, "AssignedBy")}>
+                                        Assigned by
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th
+                                    className="cursor-pointer"
+                                    value="Assigned Date"
+                                >
+                                    <div onClick={(e) => handleChangeSortPrams(e, "AssignedDate")}>
+                                        Assigned Date
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th className="cursor-pointer" value="State">
+                                    <div onClick={(e) => handleChangeSortPrams(e, "State")}>
+                                        State
+                                        <i className="bi bi-caret-down-fill ms-1"></i>
+                                    </div>
+                                </th>
+                                <th
+                                    className="cursor-pointer"
+                                    value="Action"
+                                ></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {assignmentList?.length === 0 ? (
+                                <tr className="d-block my-2">
+                                    <td>There are no assignment to display</td>
+                                </tr>
+                            ) : (
+                                assignmentList.map((row, index) => (
+                                    <AssignmentRow
+                                        key={index}
+                                        assignment={row}
+                                        index={index}
+                                        currentPage={currentPage}
+                                        pageSize={itemsPerPage}
+                                    />
+                                ))
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+                <div className="row">
+                    <PaginationComponent
+                        itemsCount={itemsNumber}
+                        itemsPerPage={itemsPerPage}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                        alwaysShown={true}
+                    />
                 </div>
             </div>
-
-            <table className="table table-borderless">
-                <thead>
-                    <tr>
-                        {headers.map((header, index) =>
-                            <th key={index} className="p-0">
-                                <div style={{ margin: "7px 0px", fontWeight: "500" }}>
-                                    {header}
-                                    <span className="ms-2">
-                                        <i className="bi bi-caret-down-fill"></i>
-                                    </span>
-                                </div>
-                                <hr className="m-0 me-3 d-block" style={{ borderTop: "2px solid #000", }} />
-                            </th>
-                        )}
-                        <th style={{ border: "0px" }}></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {assignments.map((row, index) =>
-                        <tr key={index}>
-                            <td className="p-0 ps-1">
-                                <div style={{ margin: "7px 0px 7px 1px" }}>
-                                    {index + 1}
-                                </div>
-                                <hr className="m-0 me-3" />
-                            </td>
-                            {fields.map((field, idx) => (
-                                <td key={idx} className="p-0 ps-1">
-                                    <div style={{ margin: "7px 0px 7px 1px" }}>
-                                        {row[field]}
-                                    </div>
-                                    <hr className="m-0 me-3" />
-                                </td>
-                            ))}
-                            <td className="p-0 px-3 mx-5">
-                                <button className="btn p-0 border-0">
-                                    <MdDone style={{ color: "red", fontSize: '22px', opacity: '0.2', }} />
-                                </button>
-                                <button className="btn p-0 border-0">
-                                    <IoCloseSharp className="mx-2" style={{ color: "black", fontSize: '22px', opacity: '0.2', }} />
-                                </button>
-                                <button className="btn p-0 border-0 align-items-end">
-                                    <BsArrowCounterclockwise style={{ color: "blue", fontSize: "22px" }} />
-                                </button>
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
         </div>
-    )
+    );
 }
-
-export default ManageAssignment;

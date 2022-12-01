@@ -111,22 +111,25 @@ public class AssetRepository : IAssetRepository
             Location = userLogin.Location,
             Category = x.Category.Name
         }).OrderBy(x => x.AssetCode);
-        List<string> strings = new List<string>();
-        foreach(var asset in assetList)
+        if (assignments != null)
         {
-            if (assignments.FirstOrDefault(x => x.Asset.AssetCode == asset.AssetCode)!=null)
+            List<string> strings = new List<string>();
+            foreach (var asset in assetList)
             {
-                if (asset.State == AssetState.Assigned)
+                if (assignments.FirstOrDefault(x => x.Asset.AssetCode == asset.AssetCode) != null)
+                {
+                    if (asset.State == AssetState.Assigned)
+                    {
+                        strings.Add(asset.AssetCode);
+                    }
+                }
+                else
                 {
                     strings.Add(asset.AssetCode);
                 }
             }
-            else
-            {
-                strings.Add(asset.AssetCode);
-            }
+            assetList = assetList.Where(x => strings.Contains(x.AssetCode)).OrderBy(x => x.AssetCode);
         }
-        assetList = assetList.Where(x => strings.Contains(x.AssetCode)).OrderBy(x => x.AssetCode);
         if (filterByCategory != "null")
         {
             string[] listCategory = filterByCategory.Trim().Split(' ');
@@ -138,7 +141,7 @@ public class AssetRepository : IAssetRepository
                     break;
                 }
 
-                assetList=assetList.Where(on => listCategory.Contains(on.Category)).OrderBy(x=>x.AssetCode);
+                assetList=assetList.Where(on => listCategory.Contains(on.Category.Replace(" ",""))).OrderBy(x=>x.AssetCode);
             }
         }
         if (searchString != "null")
